@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>makeline 관리자 · 라인앤코한의원</title>
+  <link rel="icon" href="https://makeline.kr/Form/_guest/basic/images/favicon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          // 원본 관리자 CSS(layout/menu/style.css) 색상
+          colors: {
+            brand: { DEFAULT: '#339BFE', 600: '#336EF4', google: '#4285F4' },
+            mint: { DEFAULT: '#80D8D0', dark: '#80C7C1', deep: '#1C968B' },
+            ink: { DEFAULT: '#373737', mid: '#515151', light: '#787878' },
+            line: { DEFAULT: '#DFDFDF', soft: '#E9E9E9' },
+            bg: { DEFAULT: '#F7F7F7', card: '#FCFCFC' },
+            danger: '#E23D3C',
+          },
+          fontFamily: { sans: ['"Noto Sans KR"', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel 은 반드시 7.x -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; color: #373737; background: #F7F7F7; word-break: keep-all; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // ========================================
+    // React Hooks Destructuring
+    // ========================================
+    const { useState, useEffect, useMemo, useCallback, useReducer, useContext, createContext } = React;
+
+    // ========================================
+    // ⚙️ 상수 · 예시 데이터
+    // ----------------------------------------
+    // ※ 로그인·상담 신청은 실제 서버(/api/admin, JWT HttpOnly 쿠키)와 DB를 사용합니다.
+    // ※ 회원·후기·이벤트·팝업·통계·설정은 아직 DB가 없어 예시 데이터(이 브라우저에만 저장)입니다.
+    // ========================================
+    const API_BASE_URL = '/api/admin';
+    const STORAGE_KEY = 'lineco_admin_demo_v1';
+    const SITE_IMG = 'https://makeline.kr/Form/_guest/basic/images';
+
+    // 인증 만료(401) 시 로그인 화면으로 돌려보내기 위한 전역 콜백
+    let onUnauthorized = () => {};
+
+    class ApiError extends Error {
+      constructor(message, status) { super(message); this.status = status; }
+    }
+
+    // 관리자 API 호출 — 쿠키는 브라우저가 자동으로 붙인다 (토큰을 JS에서 다루지 않음)
+    async function api(path, { method = 'GET', body, query } = {}) {
+      const qs = query ? '?' + new URLSearchParams(Object.entries(query).filter(([, v]) => v !== '' && v != null)).toString() : '';
+      let res;
+      try {
+        res = await fetch(`${API_BASE_URL}${path}${qs}`, {
+          method,
+          credentials: 'same-origin',
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+      } catch {
+        throw new ApiError('서버에 연결할 수 없습니다. 로컬 파일이 아닌 배포 주소(또는 vercel dev)로 열어주세요.', 0);
+      }
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 401 && path !== '/me' && path !== '/login') onUnauthorized();
+      if (!res.ok || json.ok === false) throw new ApiError(json.message || `요청 실패 (${res.status})`, res.status);
+      return json;
+    }
+
+    // 데이터 로딩 훅 (loading / error / reload)
+    function useApi(path, query) {
+      const key = JSON.stringify(query || {});
+      const [state, setState] = useState({ data: null, loading: true, error: null });
+      const [tick, setTick] = useState(0);
+      useEffect(() => {
+        let alive = true;
+        setState(s => ({ ...s, loading: true, error: null }));
+        api(path, { query })
+          .then(data => alive && setState({ data, loading: false, error: null }))
+          .catch(error => alive && setState(s => ({ ...s, loading: false, error })));
+        return () => { alive = false; };
+      }, [path, key, tick]);
+      return { ...state, reload: () => setTick(t => t + 1) };
+    }
+
+    function useDebounced(value, ms = 300) {
+      const [v, setV] = useState(value);
+      useEffect(() => { const t = setTimeout(() => setV(value), ms); return () => clearTimeout(t); }, [value, ms]);
+      return v;
+    }
+
+    const today = new Date();
+    const daysAgo = (n, h = 10) => {
+      const d = new Date(today); d.setDate(d.getDate() - n); d.setHours(h, (n * 7) % 60, 0, 0);
+      return d.toISOString();
+    };
+
+    // 상담 신청(consults)은 DB에서 불러오므로 예시 데이터에 없음
+    const SEED = {
+      members: [
+        { id: 1, userId: 'user01', name: '김*연', phone: '010-****-1234', joinedAt: daysAgo(1), level: '일반', status: 'active' },
+        { id: 2, userId: 'user02', name: '이*민', phone: '010-****-5678', joinedAt: daysAgo(4), level: '일반', status: 'active' },
+        { id: 3, userId: 'user03', name: '박*지', phone: '010-****-2468', joinedAt: daysAgo(9), level: 'VIP', status: 'active' },
+        { id: 4, userId: 'user04', name: '최*아', phone: '010-****-1357', joinedAt: daysAgo(15), level: '일반', status: 'dormant' },
+        { id: 5, userId: 'user05', name: '정*우', phone: '010-****-9753', joinedAt: daysAgo(31), level: '일반', status: 'active' },
+      ],
+      reviews: [
+        { id: 1, author: '송*지', product: '메이크라인환 슬리머', age: '30대', gender: '여자', loss: 3, rating: 5, content: '예시 리뷰 내용입니다. 유지 목적 복용 후기.', createdAt: daysAgo(2), visible: true },
+        { id: 2, author: '유*은', product: '메이크라인환 슬래머', age: '30대', gender: '여자', loss: 7, rating: 5, content: '예시 리뷰 내용입니다. 3개월 복용 후기.', createdAt: daysAgo(8), visible: true },
+        { id: 3, author: '민*선', product: '기타항목', age: '20대', gender: '여자', loss: 6, rating: 4, content: '예시 리뷰 내용입니다. 리바이브 병행 후기.', createdAt: daysAgo(12), visible: false },
+      ],
+      photos: [
+        { id: 1, title: '팔뚝 라인 관리 전후', category: '라인관리', createdAt: daysAgo(3), visible: true, consent: true },
+        { id: 2, title: '승모근 라인 전후', category: '라인관리', createdAt: daysAgo(10), visible: true, consent: true },
+        { id: 3, title: '스킨부스터 4주 경과', category: '피부관리', createdAt: daysAgo(20), visible: false, consent: false },
+      ],
+      events: [
+        { id: 1, title: '라인앤코 여리프로그램', price: 0, image: '/UPLOAD/BOARD/EVENT/2049731078_s9IcQVHM_E18492E185A9E186B7E18491E185A6E1848BE185B5E1848CE185B5_E1848BE185A7E18485E185B5E1848EE185B5E186B7E1848CE185A5E186A8E1848BE185ADE186BC.jpg', start: '', end: '', visible: true },
+        { id: 2, title: 'V라인 올인원 케어', price: 0, image: '/UPLOAD/BOARD/EVENT/1890182745_yOIlQvZg_2.png', start: '', end: '', visible: true },
+        { id: 3, title: '라인앤코 코프팅', price: 550000, image: '/UPLOAD/BOARD/EVENT/1890182745_4Pn1dSZX_5.png', start: '', end: '', visible: true },
+        { id: 4, title: '힙프팅 특가', price: 580000, image: '/UPLOAD/BOARD/EVENT/1890182745_etlRGYXO_4.png', start: '', end: '', visible: true },
+        { id: 5, title: '주름, 꺼진 부위 볼륨 채우는 볼류머샷 이벤트', price: 60000, image: '/UPLOAD/BOARD/EVENT/1890182745_x2UswoZN_3.png', start: '', end: '', visible: true },
+      ],
+      popups: [
+        { id: 1, title: '추석 연휴 진료 안내', image: '', link: '', start: '', end: '', visible: false },
+      ],
+      settings: {
+        clinicName: '라인앤코한의원', ceo: '공덕현', bizNo: '431-58-00748', phone: '02-595-0160', email: 'makelineco@naver.com',
+        address: '서울 서초구 서초대로77길 13 강남빌딩 5층',
+        hoursWeekday: '오전 10:30 - 오후 8:30', hoursSat: '오전 10:30 - 오후 4:00', lunch: '오후 2:00 - 오후 3:00',
+        topBanner: 'We find your hidden line.',
+      },
+      visits: Array.from({ length: 14 }, (_, i) => ({ date: daysAgo(13 - i), count: 80 + ((i * 37) % 90) })),
+    };
+
+    const CONSULT_STATUS = {
+      new: { label: '신규', cls: 'bg-brand/10 text-brand-600' },
+      contacted: { label: '연락완료', cls: 'bg-mint/20 text-mint-deep' },
+      done: { label: '상담완료', cls: 'bg-ink/10 text-ink-mid' },
+      cancel: { label: '취소', cls: 'bg-danger/10 text-danger' },
+    };
+
+    const fmtDate = (iso, withTime = false) => {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      const p = (n) => String(n).padStart(2, '0');
+      const base = `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`;
+      return withTime ? `${base} ${p(d.getHours())}:${p(d.getMinutes())}` : base;
+    };
+    const won = (n) => (n > 0 ? `${Number(n).toLocaleString('ko-KR')}원` : '가격 상담');
+    const isToday = (iso) => new Date(iso).toDateString() === today.toDateString();
+
+    // ========================================
+    // 🗄️ Store (useReducer + localStorage)
+    // ========================================
+    const StoreContext = createContext(null);
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? { ...SEED, ...JSON.parse(raw) } : SEED;
+      } catch { return SEED; }
+    }
+
+    function reducer(state, action) {
+      const { type, key, item, id, patch } = action;
+      switch (type) {
+        case 'add': {
+          const nextId = Math.max(0, ...state[key].map(x => x.id)) + 1;
+          return { ...state, [key]: [{ ...item, id: nextId }, ...state[key]] };
+        }
+        case 'update':
+          return { ...state, [key]: state[key].map(x => (x.id === id ? { ...x, ...patch } : x)) };
+        case 'remove':
+          return { ...state, [key]: state[key].filter(x => x.id !== id) };
+        case 'settings':
+          return { ...state, settings: { ...state.settings, ...patch } };
+        case 'reset':
+          return SEED;
+        default:
+          return state;
+      }
+    }
+
+    function StoreProvider({ children }) {
+      const [state, dispatch] = useReducer(reducer, undefined, loadState);
+      useEffect(() => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+      }, [state]);
+      return <StoreContext.Provider value={{ state, dispatch }}>{children}</StoreContext.Provider>;
+    }
+    const useStore = () => useContext(StoreContext);
+
+    // 토스트 알림
+    const ToastContext = createContext(() => {});
+    function ToastProvider({ children }) {
+      const [msg, setMsg] = useState(null);
+      useEffect(() => {
+        if (!msg) return;
+        const t = setTimeout(() => setMsg(null), 2200);
+        return () => clearTimeout(t);
+      }, [msg]);
+      return (
+        <ToastContext.Provider value={setMsg}>
+          {children}
+          {msg && (
+            <div role="status" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-lg bg-ink text-white text-sm shadow-lg">{msg}</div>
+          )}
+        </ToastContext.Provider>
+      );
+    }
+    const useToast = () => useContext(ToastContext);
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+    function Button({ variant = 'primary', size = 'md', disabled = false, onClick, type = 'button', className = '', children, ...rest }) {
+      const variants = {
+        primary: 'bg-brand text-white hover:bg-brand-600',
+        secondary: 'bg-white text-ink border border-line hover:border-brand hover:text-brand',
+        danger: 'bg-danger text-white hover:opacity-90',
+        ghost: 'bg-transparent text-ink-mid hover:text-brand',
+        mint: 'bg-mint text-white hover:bg-mint-dark',
+      };
+      const sizes = { sm: 'h-8 px-3 text-xs', md: 'h-10 px-4 text-sm', lg: 'h-12 px-6 text-base' };
+      return (
+        <button type={type} onClick={onClick} disabled={disabled}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}>
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ type = 'text', label, value, onChange, placeholder, error, disabled = false, className = '', id, ...rest }) {
+      return (
+        <div className={className}>
+          {label && <label htmlFor={id} className="block mb-1.5 text-[13px] font-medium text-ink-mid">{label}</label>}
+          <input id={id} type={type} value={value} onChange={onChange} placeholder={placeholder} disabled={disabled} aria-invalid={!!error}
+            className={`w-full h-10 px-3 rounded-md border bg-white text-sm outline-none transition-colors placeholder:text-ink-light/70 disabled:bg-bg ${error ? 'border-danger' : 'border-line focus:border-brand'}`}
+            {...rest} />
+          {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+        </div>
+      );
+    }
+
+    function Textarea({ label, id, value, onChange, rows = 4, placeholder, className = '' }) {
+      return (
+        <div className={className}>
+          {label && <label htmlFor={id} className="block mb-1.5 text-[13px] font-medium text-ink-mid">{label}</label>}
+          <textarea id={id} value={value} onChange={onChange} rows={rows} placeholder={placeholder}
+            className="w-full px-3 py-2 rounded-md border border-line bg-white text-sm outline-none focus:border-brand resize-y" />
+        </div>
+      );
+    }
+
+    function Select({ label, id, value, onChange, options, className = '' }) {
+      return (
+        <div className={className}>
+          {label && <label htmlFor={id} className="block mb-1.5 text-[13px] font-medium text-ink-mid">{label}</label>}
+          <select id={id} value={value} onChange={onChange}
+            className="w-full h-10 px-3 rounded-md border border-line bg-white text-sm outline-none focus:border-brand">
+            {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+      );
+    }
+
+    function Toggle({ checked, onChange, label }) {
+      return (
+        <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)}
+          className={`relative inline-flex w-10 h-[22px] rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-line'}`}>
+          <span className={`absolute top-[3px] w-4 h-4 rounded-full bg-white shadow transition-all ${checked ? 'left-[21px]' : 'left-[3px]'}`} />
+        </button>
+      );
+    }
+
+    function Card({ className = '', children }) {
+      return <div className={`bg-white rounded-xl border border-line-soft shadow-[0_0_9px_rgba(103,103,103,0.08)] ${className}`}>{children}</div>;
+    }
+
+    function Badge({ className = '', children }) {
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${className}`}>{children}</span>;
+    }
+
+    function Modal({ isOpen, onClose, title, size = 'md', children, footer }) {
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => e.key === 'Escape' && onClose();
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+      }, [isOpen, onClose]);
+      if (!isOpen) return null;
+      const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' };
+      return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={(e) => e.stopPropagation()}
+            className={`w-full ${sizes[size]} bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]`}>
+            <div className="flex items-center justify-between px-6 h-14 border-b border-line-soft shrink-0">
+              <h3 id="modal-title" className="font-bold text-ink">{title}</h3>
+              <button onClick={onClose} aria-label="닫기" className="text-2xl leading-none text-ink-light hover:text-ink">×</button>
+            </div>
+            <div className="px-6 py-5 overflow-y-auto">{children}</div>
+            {footer && <div className="px-6 py-4 border-t border-line-soft bg-bg-card flex justify-end gap-2 shrink-0">{footer}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    function ConfirmModal({ isOpen, onClose, onConfirm, message }) {
+      return (
+        <Modal isOpen={isOpen} onClose={onClose} title="확인" size="sm"
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button variant="danger" onClick={onConfirm}>삭제</Button></>}>
+          <p className="text-sm leading-6">{message}</p>
+        </Modal>
+      );
+    }
+
+    function PageHeader({ title, desc, actions }) {
+      return (
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-[22px] font-bold text-ink">{title}</h2>
+            {desc && <p className="mt-1 text-sm text-ink-light">{desc}</p>}
+          </div>
+          {actions && <div className="flex gap-2">{actions}</div>}
+        </div>
+      );
+    }
+
+    function EmptyRow({ colSpan, text = '데이터가 없습니다.' }) {
+      return <tr><td colSpan={colSpan} className="py-16 text-center text-sm text-ink-light">{text}</td></tr>;
+    }
+
+    function Table({ head, children }) {
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="bg-bg border-y border-line text-ink-mid">
+                {head.map(h => <th key={h} scope="col" className="px-4 h-11 font-medium text-left whitespace-nowrap">{h}</th>)}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line-soft">{children}</tbody>
+          </table>
+        </div>
+      );
+    }
+
+    function SearchBar({ value, onChange, placeholder = '검색어 입력', children }) {
+      return (
+        <div className="flex flex-col md:flex-row gap-2 p-4 border-b border-line-soft">
+          {children}
+          <div className="relative flex-1">
+            <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label="검색"
+              className="w-full h-10 pl-9 pr-3 rounded-md border border-line text-sm outline-none focus:border-brand" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-light" aria-hidden="true">⌕</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Pagination({ page, total, perPage, onChange }) {
+      const pages = Math.max(1, Math.ceil(total / perPage));
+      if (pages <= 1) return null;
+      return (
+        <nav className="flex justify-center gap-1 py-4" aria-label="페이지">
+          {Array.from({ length: pages }, (_, i) => i + 1).map(n => (
+            <button key={n} onClick={() => onChange(n)} aria-current={n === page ? 'page' : undefined}
+              className={`w-8 h-8 rounded text-sm ${n === page ? 'bg-brand text-white' : 'text-ink-mid hover:bg-bg'}`}>{n}</button>
+          ))}
+        </nav>
+      );
+    }
+
+    // ========================================
+    // 🔀 Router Components
+    // ========================================
+    const RouterContext = createContext({ path: '/', params: {}, navigate: () => {} });
+    const getHashPath = () => {
+      const raw = window.location.hash.replace(/^#/, '');
+      return raw.startsWith('/') ? raw.split('?')[0] : '/';
+    };
+
+    function matchRoute(pattern, path) {
+      const p = pattern.split('/').filter(Boolean);
+      const s = path.split('/').filter(Boolean);
+      if (p.length !== s.length) return null;
+      const params = {};
+      for (let i = 0; i < p.length; i++) {
+        if (p[i].startsWith(':')) params[p[i].slice(1)] = decodeURIComponent(s[i]);
+        else if (p[i] !== s[i]) return null;
+      }
+      return params;
+    }
+
+    function Router({ children }) {
+      const [path, setPath] = useState(getHashPath);
+      useEffect(() => {
+        const onChange = () => { setPath(getHashPath()); window.scrollTo(0, 0); };
+        window.addEventListener('hashchange', onChange);
+        return () => window.removeEventListener('hashchange', onChange);
+      }, []);
+      const navigate = useCallback((to) => { window.location.hash = to; }, []);
+      return <RouterContext.Provider value={{ path, params: {}, navigate }}>{children}</RouterContext.Provider>;
+    }
+    const useRouter = () => useContext(RouterContext);
+    const useParams = () => useContext(RouterContext).params;
+
+    function Route() { return null; }
+    function Routes({ children, fallback = null }) {
+      const router = useRouter();
+      for (const child of React.Children.toArray(children)) {
+        const params = matchRoute(child.props.path, router.path);
+        if (params) return <RouterContext.Provider value={{ ...router, params }}>{child.props.element}</RouterContext.Provider>;
+      }
+      return fallback;
+    }
+    function Link({ to, className = '', children, ...rest }) {
+      return <a href={`#${to}`} className={className} {...rest}>{children}</a>;
+    }
+
+    // ========================================
+    // 🧩 Common/Layout Components
+    // ========================================
+    const MENU = [
+      { label: '대시보드', to: '/' },
+      { label: '상담 신청', to: '/consults' },
+      { label: '회원 관리', to: '/members' },
+      { label: '치료후기', to: '/reviews', sub: [
+        { label: '실시간 리뷰', to: '/reviews' },
+        { label: '전후사진', to: '/photos' },
+      ]},
+      { label: '이벤트', to: '/events' },
+      { label: '팝업 관리', to: '/popups' },
+      { label: '접속 통계', to: '/stats' },
+      { label: '사이트 설정', to: '/settings' },
+    ];
+
+    const isActive = (item, path) => item.to === path || (item.sub || []).some(s => s.to === path);
+
+    function Header({ user, onLogout }) {
+      const { path } = useRouter();
+      const [open, setOpen] = useState(false);
+      useEffect(() => { setOpen(false); }, [path]);
+
+      return (
+        <header className="sticky top-0 z-50 bg-white h-20 shadow-[0_0_9.3px_rgba(103,103,103,0.25)]">
+          <div className="h-full max-w-[1600px] mx-auto px-5 flex items-center gap-8">
+            <Link to="/" className="flex flex-col leading-tight shrink-0">
+              <span className="text-[11px] text-ink-light">라인앤코한의원</span>
+              <b className="text-lg text-ink">makeline <span className="text-brand">관리자</span></b>
+            </Link>
+
+            <nav className="hidden xl:flex h-full" aria-label="관리자 메뉴">
+              <ul className="flex h-full">
+                {MENU.map(m => (
+                  <li key={m.to} className="relative group h-full">
+                    <Link to={m.to} aria-current={isActive(m, path) ? 'page' : undefined}
+                      className={`relative flex items-center h-full px-4 text-[15px] font-medium transition-colors ${isActive(m, path) ? 'text-brand' : 'text-ink hover:text-brand'}`}>
+                      {m.label}
+                      <span className={`absolute left-4 right-4 bottom-0 h-[3px] rounded-t bg-brand transition-opacity ${isActive(m, path) ? 'opacity-100' : 'opacity-0'}`} />
+                    </Link>
+                    {m.sub && (
+                      <ul className="absolute top-full left-0 min-w-[150px] py-2 bg-white rounded-b-lg shadow-lg border border-line-soft opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                        {m.sub.map(s => (
+                          <li key={s.to}>
+                            <Link to={s.to} className={`block px-4 py-2 text-sm ${s.to === path ? 'text-brand font-medium' : 'text-ink-mid hover:text-brand hover:bg-bg'}`}>{s.label}</Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <div className="ml-auto flex items-center gap-2">
+              <a href="index.html" target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center h-9 px-3 rounded-md border border-line text-sm text-ink-mid hover:border-mint hover:text-mint-deep">홈페이지 ↗</a>
+              <span className="hidden md:inline text-sm text-ink-light">{user?.name || user?.username}님</span>
+              <Button variant="secondary" size="sm" onClick={onLogout} className="hidden sm:inline-flex h-9">로그아웃</Button>
+              <button onClick={() => setOpen(o => !o)} aria-label="메뉴" aria-expanded={open} className="xl:hidden w-10 h-10 flex flex-col items-center justify-center gap-[5px]">
+                <span className="w-5 h-[2px] bg-ink" /><span className="w-5 h-[2px] bg-ink" /><span className="w-5 h-[2px] bg-ink" />
+              </button>
+            </div>
+          </div>
+
+          {open && (
+            <nav className="xl:hidden absolute top-20 inset-x-0 bg-white border-t border-line-soft shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto" aria-label="모바일 관리자 메뉴">
+              <ul>
+                {MENU.flatMap(m => (m.sub ? m.sub.map(s => ({ ...s, label: `${m.label} · ${s.label}` })) : [m])).map(m => (
+                  <li key={m.to}>
+                    <Link to={m.to} className={`block px-5 py-3.5 text-sm border-b border-line-soft ${m.to === path ? 'text-brand font-medium bg-brand/5' : 'text-ink'}`}>{m.label}</Link>
+                  </li>
+                ))}
+                <li className="flex gap-2 p-4 sm:hidden">
+                  <a href="index.html" target="_blank" rel="noopener noreferrer" className="flex-1 h-10 inline-flex items-center justify-center rounded-md border border-line text-sm">홈페이지 ↗</a>
+                  <Button variant="secondary" onClick={onLogout} className="flex-1">로그아웃</Button>
+                </li>
+              </ul>
+            </nav>
+          )}
+        </header>
+      );
+    }
+
+    function DemoNotice() {
+      return (
+        <div className="bg-mint/15 border-b border-mint/40 text-[13px] text-mint-deep">
+          <div className="max-w-[1600px] mx-auto px-5 py-2">
+            <b>상담 신청</b>은 실제 DB와 연결되어 있습니다 · 회원·후기·이벤트·팝업·통계·설정은 아직 예시 데이터입니다(이 브라우저에만 저장).
+          </div>
+        </div>
+      );
+    }
+
+    function ErrorBox({ error, onRetry }) {
+      return (
+        <div role="alert" className="py-14 text-center text-sm">
+          <p className="text-danger">{error?.message || '불러오지 못했습니다.'}</p>
+          {onRetry && <Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">다시 시도</Button>}
+        </div>
+      );
+    }
+
+    function Spinner({ label = '불러오는 중…' }) {
+      return (
+        <div className="py-14 flex flex-col items-center gap-3 text-sm text-ink-light" role="status">
+          <span className="w-6 h-6 rounded-full border-2 border-brand/30 border-t-brand animate-spin" />
+          {label}
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 로그인 (POST /api/admin/login → HttpOnly 쿠키)
+    // ========================================
+    function LoginPage({ onLogin, notice }) {
+      const [form, setForm] = useState({ id: '', pw: '', save: false });
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      useEffect(() => {
+        try {
+          const saved = localStorage.getItem('lineco_admin_saved_id');
+          if (saved) setForm(f => ({ ...f, id: saved, save: true }));
+        } catch {}
+      }, []);
+
+      const submit = async (e) => {
+        e.preventDefault();
+        if (!form.id.trim()) return setError('아이디를 입력하세요.');
+        if (!form.pw) return setError('비밀번호를 입력하세요.');
+        setLoading(true);
+        setError('');
+        try {
+          const { user } = await api('/login', { method: 'POST', body: { username: form.id.trim(), password: form.pw } });
+          try {
+            if (form.save) localStorage.setItem('lineco_admin_saved_id', form.id.trim());
+            else localStorage.removeItem('lineco_admin_saved_id');
+          } catch {}
+          onLogin(user);
+        } catch (err) {
+          setError(err.message);
+          setForm(f => ({ ...f, pw: '' }));
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center p-5 bg-bg">
+          <div className="w-full max-w-[600px] bg-white rounded-[20px] px-6 sm:px-14 py-12 shadow-[0_0_9.3px_rgba(103,103,103,0.15)]">
+            <div className="text-center">
+              <img src={`${SITE_IMG}/logo_full_color.svg`} alt="" className="h-14 mx-auto" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <p className="mt-4 text-sm text-ink-light">라인앤코한의원</p>
+              <h1 className="mt-1 text-2xl font-bold text-ink">makeline 관리자</h1>
+            </div>
+            {notice && <p className="mt-6 px-4 py-2.5 rounded-md bg-brand/10 text-sm text-brand-600 text-center">{notice}</p>}
+            <form onSubmit={submit} className="mt-10 space-y-3" noValidate>
+              <Input id="p_id" label="아이디" placeholder="아이디 입력" value={form.id} autoComplete="username" disabled={loading}
+                onChange={(e) => { setForm({ ...form, id: e.target.value }); setError(''); }} className="[&_label]:sr-only" />
+              <Input id="p_pass" type="password" label="비밀번호" placeholder="비밀번호 입력" value={form.pw} autoComplete="current-password" disabled={loading}
+                onChange={(e) => { setForm({ ...form, pw: e.target.value }); setError(''); }} className="[&_label]:sr-only" />
+              <label className="flex items-center gap-2 pt-1 text-sm text-ink-mid cursor-pointer w-fit">
+                <input type="checkbox" checked={form.save} onChange={(e) => setForm({ ...form, save: e.target.checked })} className="w-4 h-4 accent-[#339BFE]" />
+                아이디저장
+              </label>
+              {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+              <Button type="submit" size="lg" disabled={loading} className="w-full !mt-6">{loading ? '로그인 중…' : '로그인'}</Button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 대시보드 (상담 = 실제 DB, 나머지 = 예시)
+    // ========================================
+    function DashboardPage() {
+      const { state } = useStore();
+      const { data, loading, error, reload } = useApi('/consults', { size: 5 });
+      const summary = data?.summary;
+      const hiddenReviews = state.reviews.filter(r => !r.visible).length;
+      const todayVisits = state.visits[state.visits.length - 1]?.count || 0;
+      const num = (v) => (loading ? '…' : (v ?? 0).toLocaleString('ko-KR'));
+
+      const stats = [
+        { label: '오늘 상담 신청', value: num(summary?.today), to: '/consults', color: 'text-brand' },
+        { label: '미처리 상담', value: num(summary?.new), to: '/consults', color: 'text-danger' },
+        { label: '전체 회원 (예시)', value: state.members.length.toLocaleString('ko-KR'), to: '/members', color: 'text-ink' },
+        { label: '오늘 방문자 (예시)', value: todayVisits.toLocaleString('ko-KR'), to: '/stats', color: 'text-mint-deep' },
+      ];
+
+      return (
+        <>
+          <PageHeader title="대시보드" desc={`${fmtDate(today.toISOString())} 기준`} />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map(s => (
+              <Link key={s.label} to={s.to} className="block">
+                <Card className="p-5 hover:border-brand/40 transition-colors">
+                  <p className="text-sm text-ink-light">{s.label}</p>
+                  <p className={`mt-2 text-3xl font-bold ${s.color}`}>{s.value}</p>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 grid lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <div className="flex items-center justify-between px-5 h-14 border-b border-line-soft">
+                <h3 className="font-bold">최근 상담 신청</h3>
+                <Link to="/consults" className="text-sm text-brand hover:underline">전체보기</Link>
+              </div>
+              {loading ? <Spinner /> : error ? <ErrorBox error={error} onRetry={reload} /> : (
+                <ul className="divide-y divide-line-soft">
+                  {data.items.map(c => (
+                    <li key={c.id} className="flex items-center gap-3 px-5 py-3.5 text-sm">
+                      <Badge className={`w-[68px] justify-center shrink-0 ${CONSULT_STATUS[c.status].cls}`}>{CONSULT_STATUS[c.status].label}</Badge>
+                      <span className="font-medium w-16 shrink-0 truncate">{c.name}</span>
+                      <span className="flex-1 truncate text-ink-mid">{c.content || '-'}</span>
+                      <span className="text-xs text-ink-light whitespace-nowrap">{fmtDate(c.created_at, true)}</span>
+                    </li>
+                  ))}
+                  {data.items.length === 0 && <li className="py-12 text-center text-sm text-ink-light">아직 접수된 상담 신청이 없습니다.</li>}
+                </ul>
+              )}
+            </Card>
+
+            <Card>
+              <div className="px-5 h-14 flex items-center border-b border-line-soft"><h3 className="font-bold">확인 필요</h3></div>
+              <ul className="p-5 space-y-3 text-sm">
+                <li className="flex justify-between"><span>미처리 상담</span><Link to="/consults" className="font-bold text-danger">{num(summary?.new)}건</Link></li>
+                <li className="flex justify-between"><span>연락완료 (상담 대기)</span><Link to="/consults" className="font-bold text-ink">{num(summary?.contacted)}건</Link></li>
+                <li className="flex justify-between"><span>비공개 리뷰 (예시)</span><Link to="/reviews" className="font-bold text-ink">{hiddenReviews}건</Link></li>
+                <li className="flex justify-between"><span>노출 중 이벤트 (예시)</span><Link to="/events" className="font-bold text-ink">{state.events.filter(e => e.visible).length}건</Link></li>
+              </ul>
+            </Card>
+          </div>
+
+          <Card className="mt-6 p-5">
+            <h3 className="font-bold mb-4">최근 14일 방문자 <span className="text-xs font-normal text-ink-light">(예시)</span></h3>
+            <VisitChart data={state.visits} />
+          </Card>
+        </>
+      );
+    }
+
+    function VisitChart({ data }) {
+      const max = Math.max(1, ...data.map(d => d.count));
+      return (
+        <div className="flex items-end gap-1.5 sm:gap-2 h-48" role="img" aria-label="최근 14일 방문자 막대그래프">
+          {data.map(d => (
+            <div key={d.date} className="flex-1 flex flex-col items-center justify-end h-full group">
+              <span className="text-[10px] text-ink-light opacity-0 group-hover:opacity-100">{d.count}</span>
+              <div className="w-full rounded-t bg-brand/70 group-hover:bg-brand transition-colors" style={{ height: `${(d.count / max) * 85}%` }} />
+              <span className="mt-1 text-[10px] text-ink-light">{new Date(d.date).getDate()}일</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 상담 신청 관리 (실제 DB — /api/admin/consults)
+    // ========================================
+    function ConsultsPage() {
+      const toast = useToast();
+      const [q, setQ] = useState('');
+      const [status, setStatus] = useState('all');
+      const [page, setPage] = useState(1);
+      const [selected, setSelected] = useState(null);
+      const [confirmId, setConfirmId] = useState(null);
+      const [busy, setBusy] = useState(false);
+      const PER = 20;
+      const dq = useDebounced(q.trim());
+
+      useEffect(() => { setPage(1); }, [dq, status]);
+
+      const { data, loading, error, reload } = useApi('/consults', {
+        q: dq, status: status === 'all' ? '' : status, page, size: PER,
+      });
+
+      const save = async (patch) => {
+        setBusy(true);
+        try {
+          await api('/consults', { method: 'PATCH', query: { id: selected.id }, body: patch });
+          setSelected(null);
+          toast('저장되었습니다.');
+          reload();
+        } catch (e) { toast(e.message); } finally { setBusy(false); }
+      };
+
+      const remove = async () => {
+        setBusy(true);
+        try {
+          await api('/consults', { method: 'DELETE', query: { id: confirmId } });
+          setConfirmId(null);
+          toast('삭제되었습니다.');
+          reload();
+        } catch (e) { toast(e.message); } finally { setBusy(false); }
+      };
+
+      const exportCsv = async () => {
+        try {
+          const { items } = await api('/consults', { query: { all: '1', q: dq, status: status === 'all' ? '' : status } });
+          const rows = [['번호', '이름', '연락처', '상담내용', '신청일', '상태', '메모'],
+            ...items.map(c => [c.id, c.name, c.phone, c.content || '', fmtDate(c.created_at, true), CONSULT_STATUS[c.status].label, c.memo || ''])];
+          const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+          a.download = `상담신청_${fmtDate(today.toISOString())}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } catch (e) { toast(e.message); }
+      };
+
+      const s = data?.summary;
+      const tabs = [{ value: 'all', label: '전체', n: s?.all }, ...Object.entries(CONSULT_STATUS).map(([v, c]) => ({ value: v, label: c.label, n: s?.[v] }))];
+
+      return (
+        <>
+          <PageHeader title="상담 신청" desc="홈페이지 하단 '비대면 처방 / 진료상담 신청' 접수 내역 (실시간 DB)"
+            actions={<>
+              <Button variant="secondary" onClick={reload}>새로고침</Button>
+              <Button variant="secondary" onClick={exportCsv}>엑셀(CSV) 다운로드</Button>
+            </>} />
+          <Card>
+            <div className="flex flex-wrap gap-1 px-4 pt-4" role="tablist" aria-label="처리 상태">
+              {tabs.map(t => (
+                <button key={t.value} role="tab" aria-selected={status === t.value} onClick={() => setStatus(t.value)}
+                  className={`h-9 px-3.5 rounded-full text-sm transition-colors ${status === t.value ? 'bg-brand text-white' : 'bg-bg text-ink-mid hover:bg-line-soft'}`}>
+                  {t.label} <span className="opacity-70">{t.n ?? ''}</span>
+                </button>
+              ))}
+            </div>
+            <SearchBar value={q} onChange={setQ} placeholder="이름 · 연락처 · 상담내용 검색" />
+            {loading && !data ? <Spinner /> : error ? <ErrorBox error={error} onRetry={reload} /> : (
+              <div className={loading ? 'opacity-60 transition-opacity' : ''}>
+                <Table head={['번호', '상태', '이름', '연락처', '상담내용', '신청일', '관리']}>
+                  {data.items.length === 0 ? <EmptyRow colSpan={7} text={dq || status !== 'all' ? '조건에 맞는 상담 신청이 없습니다.' : '아직 접수된 상담 신청이 없습니다.'} /> : data.items.map(c => (
+                    <tr key={c.id} className="hover:bg-bg-card">
+                      <td className="px-4 py-3 text-ink-light">{c.id}</td>
+                      <td className="px-4 py-3"><Badge className={CONSULT_STATUS[c.status].cls}>{CONSULT_STATUS[c.status].label}</Badge></td>
+                      <td className="px-4 py-3 font-medium">{c.name}</td>
+                      <td className="px-4 py-3 whitespace-nowrap"><a href={`tel:${c.phone}`} className="hover:text-brand">{c.phone}</a></td>
+                      <td className="px-4 py-3 max-w-[320px] truncate">{c.content || '-'}{c.memo && <span className="ml-2 text-xs text-mint-deep">📝</span>}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-light">{fmtDate(c.created_at, true)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Button size="sm" variant="secondary" onClick={() => setSelected(c)}>상세</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setConfirmId(c.id)} className="hover:!text-danger">삭제</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </Table>
+                <Pagination page={page} total={data.total} perPage={PER} onChange={setPage} />
+              </div>
+            )}
+          </Card>
+
+          {selected && <ConsultDetail consult={selected} busy={busy} onClose={() => setSelected(null)} onSave={save} />}
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} onConfirm={remove}
+            message="이 상담 신청을 삭제할까요? 삭제 후에는 되돌릴 수 없습니다." />
+        </>
+      );
+    }
+
+    function ConsultDetail({ consult, busy, onClose, onSave }) {
+      const [status, setStatus] = useState(consult.status);
+      const [memo, setMemo] = useState(consult.memo || '');
+      return (
+        <Modal isOpen onClose={onClose} title={`상담 신청 #${consult.id}`}
+          footer={<><Button variant="secondary" onClick={onClose}>닫기</Button><Button disabled={busy} onClick={() => onSave({ status, memo })}>{busy ? '저장 중…' : '저장'}</Button></>}>
+          <dl className="grid grid-cols-[80px_1fr] gap-y-3 text-sm">
+            <dt className="text-ink-light">이름</dt><dd className="font-medium">{consult.name}</dd>
+            <dt className="text-ink-light">연락처</dt><dd><a href={`tel:${consult.phone}`} className="text-brand">{consult.phone}</a></dd>
+            <dt className="text-ink-light">신청일</dt><dd>{fmtDate(consult.created_at, true)}</dd>
+            <dt className="text-ink-light">상담내용</dt><dd className="whitespace-pre-wrap">{consult.content || '-'}</dd>
+            {consult.updated_at !== consult.created_at && <><dt className="text-ink-light">최종 수정</dt><dd>{fmtDate(consult.updated_at, true)}</dd></>}
+          </dl>
+          <div className="mt-6 space-y-4">
+            <Select id="detail-status" label="처리 상태" value={status} onChange={(e) => setStatus(e.target.value)}
+              options={Object.entries(CONSULT_STATUS).map(([v, s]) => ({ value: v, label: s.label }))} />
+            <Textarea id="detail-memo" label="관리자 메모" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="연락 내용, 예약 일정 등" />
+          </div>
+        </Modal>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 회원 관리
+    // ========================================
+    function MembersPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [q, setQ] = useState('');
+      const [confirmId, setConfirmId] = useState(null);
+      const list = state.members.filter(m => !q || [m.userId, m.name, m.phone].some(v => v.includes(q)));
+
+      return (
+        <>
+          <PageHeader title="회원 관리" desc={`전체 ${state.members.length}명`} />
+          <Card>
+            <SearchBar value={q} onChange={setQ} placeholder="아이디 · 이름 · 연락처 검색" />
+            <Table head={['번호', '아이디', '이름', '연락처', '등급', '상태', '가입일', '관리']}>
+              {list.length === 0 ? <EmptyRow colSpan={8} /> : list.map(m => (
+                <tr key={m.id} className="hover:bg-bg-card">
+                  <td className="px-4 py-3 text-ink-light">{m.id}</td>
+                  <td className="px-4 py-3 font-medium">{m.userId}</td>
+                  <td className="px-4 py-3">{m.name}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{m.phone}</td>
+                  <td className="px-4 py-3">
+                    <select aria-label={`${m.userId} 등급`} value={m.level}
+                      onChange={(e) => { dispatch({ type: 'update', key: 'members', id: m.id, patch: { level: e.target.value } }); toast('등급이 변경되었습니다.'); }}
+                      className="h-8 px-2 rounded border border-line text-sm">
+                      <option>일반</option><option>VIP</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge className={m.status === 'active' ? 'bg-mint/20 text-mint-deep' : 'bg-ink/10 text-ink-mid'}>{m.status === 'active' ? '정상' : '휴면'}</Badge>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{fmtDate(m.joinedAt)}</td>
+                  <td className="px-4 py-3"><Button size="sm" variant="ghost" onClick={() => setConfirmId(m.id)} className="hover:!text-danger">탈퇴처리</Button></td>
+                </tr>
+              ))}
+            </Table>
+          </Card>
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 회원을 탈퇴 처리할까요?"
+            onConfirm={() => { dispatch({ type: 'remove', key: 'members', id: confirmId }); setConfirmId(null); toast('탈퇴 처리되었습니다.'); }} />
+        </>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 치료후기 — 실시간 리뷰 / 전후사진
+    // ========================================
+    function Stars({ n }) {
+      return <span className="text-amber-400 tracking-tight" aria-label={`별점 ${n}점`}>{'★'.repeat(n)}<span className="text-line">{'★'.repeat(5 - n)}</span></span>;
+    }
+
+    function ReviewsPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [q, setQ] = useState('');
+      const [view, setView] = useState(null);
+      const [confirmId, setConfirmId] = useState(null);
+      const list = state.reviews.filter(r => !q || [r.author, r.product, r.content].some(v => v.includes(q)));
+
+      return (
+        <>
+          <PageHeader title="실시간 리뷰" desc="의료법에 따라 홈페이지에서는 로그인한 회원에게만 공개됩니다." />
+          <Card>
+            <SearchBar value={q} onChange={setQ} placeholder="작성자 · 상품 · 내용 검색" />
+            <Table head={['번호', '작성자', '상품', '연령/성별', '감량', '별점', '작성일', '공개', '관리']}>
+              {list.length === 0 ? <EmptyRow colSpan={9} /> : list.map(r => (
+                <tr key={r.id} className="hover:bg-bg-card">
+                  <td className="px-4 py-3 text-ink-light">{r.id}</td>
+                  <td className="px-4 py-3 font-medium">{r.author}</td>
+                  <td className="px-4 py-3">{r.product}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{r.age} · {r.gender}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">-{r.loss}kg</td>
+                  <td className="px-4 py-3"><Stars n={r.rating} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{fmtDate(r.createdAt)}</td>
+                  <td className="px-4 py-3"><Toggle label="공개 여부" checked={r.visible} onChange={(v) => { dispatch({ type: 'update', key: 'reviews', id: r.id, patch: { visible: v } }); toast(v ? '공개되었습니다.' : '비공개 처리되었습니다.'); }} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Button size="sm" variant="secondary" onClick={() => setView(r)}>보기</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmId(r.id)} className="hover:!text-danger">삭제</Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          </Card>
+          <Modal isOpen={!!view} onClose={() => setView(null)} title="리뷰 내용">
+            {view && (
+              <>
+                <p className="text-sm text-ink-light">{view.author} · {view.product} · {view.age} {view.gender} · -{view.loss}kg</p>
+                <p className="mt-1"><Stars n={view.rating} /></p>
+                <p className="mt-4 text-sm leading-7 whitespace-pre-wrap">{view.content}</p>
+              </>
+            )}
+          </Modal>
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 리뷰를 삭제할까요?"
+            onConfirm={() => { dispatch({ type: 'remove', key: 'reviews', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+        </>
+      );
+    }
+
+    function PhotosPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [editing, setEditing] = useState(null);
+      const [confirmId, setConfirmId] = useState(null);
+      const empty = { title: '', category: '라인관리', visible: false, consent: false };
+
+      const save = (data) => {
+        if (!data.title.trim()) return toast('제목을 입력하세요.');
+        if (data.visible && !data.consent) return toast('환자 동의 확인 후에만 공개할 수 있습니다.');
+        if (data.id) dispatch({ type: 'update', key: 'photos', id: data.id, patch: data });
+        else dispatch({ type: 'add', key: 'photos', item: { ...data, createdAt: new Date().toISOString() } });
+        setEditing(null);
+        toast('저장되었습니다.');
+      };
+
+      return (
+        <>
+          <PageHeader title="전후사진" desc="환자 동의서를 받은 사진만 공개할 수 있습니다."
+            actions={<Button onClick={() => setEditing(empty)}>+ 사진 등록</Button>} />
+          {state.photos.length === 0 ? (
+            <Card className="py-20 text-center text-sm text-ink-light">등록된 사진이 없습니다.</Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {state.photos.map(p => (
+                <Card key={p.id} className="overflow-hidden">
+                  <div className="grid grid-cols-2 aspect-[2/1] bg-bg text-xs text-ink-light">
+                    <div className="flex items-center justify-center border-r border-line-soft">BEFORE</div>
+                    <div className="flex items-center justify-center">AFTER</div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-brand/10 text-brand-600">{p.category}</Badge>
+                      {!p.consent && <Badge className="bg-danger/10 text-danger">동의 미확인</Badge>}
+                    </div>
+                    <h3 className="mt-2 font-medium truncate">{p.title}</h3>
+                    <p className="text-xs text-ink-light">{fmtDate(p.createdAt)} · {p.visible ? '공개' : '비공개'}</p>
+                    <div className="mt-3 flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => setEditing(p)}>수정</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmId(p.id)} className="hover:!text-danger">삭제</Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+          {editing && <PhotoForm initial={editing} onClose={() => setEditing(null)} onSave={save} />}
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 사진을 삭제할까요?"
+            onConfirm={() => { dispatch({ type: 'remove', key: 'photos', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+        </>
+      );
+    }
+
+    function PhotoForm({ initial, onClose, onSave }) {
+      const [f, setF] = useState(initial);
+      return (
+        <Modal isOpen onClose={onClose} title={f.id ? '전후사진 수정' : '전후사진 등록'}
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={() => onSave(f)}>저장</Button></>}>
+          <div className="space-y-4">
+            <Input id="ph-title" label="제목" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+            <Select id="ph-cat" label="분류" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}
+              options={['탄력관리', '라인관리', '윤곽/실리프팅', '피부관리', '다이어트'].map(v => ({ value: v, label: v }))} />
+            <div className="grid grid-cols-2 gap-3">
+              {['BEFORE', 'AFTER'].map(k => (
+                <label key={k} className="flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed border-line text-xs text-ink-light cursor-pointer hover:border-brand">
+                  {k} 이미지<input type="file" accept="image/*" className="sr-only" />
+                </label>
+              ))}
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={f.consent} onChange={(e) => setF({ ...f, consent: e.target.checked })} className="w-4 h-4 accent-[#339BFE]" />
+              환자 사진 게시 동의서를 확인했습니다
+            </label>
+            <div className="flex items-center gap-3 text-sm"><Toggle label="공개" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 공개</div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 이벤트 관리
+    // ========================================
+    function EventsPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [editing, setEditing] = useState(null);
+      const [confirmId, setConfirmId] = useState(null);
+      const empty = { title: '', price: 0, image: '', start: '', end: '', visible: true };
+
+      const save = (data) => {
+        if (!data.title.trim()) return toast('이벤트명을 입력하세요.');
+        if (data.start && data.end && data.start > data.end) return toast('종료일이 시작일보다 빠릅니다.');
+        const clean = { ...data, price: Number(data.price) || 0 };
+        if (clean.id) dispatch({ type: 'update', key: 'events', id: clean.id, patch: clean });
+        else dispatch({ type: 'add', key: 'events', item: clean });
+        setEditing(null);
+        toast('저장되었습니다.');
+      };
+
+      const imgUrl = (p) => (p ? (p.startsWith('http') ? p : `https://makeline.kr${p}`) : '');
+
+      return (
+        <>
+          <PageHeader title="이벤트" desc="홈페이지 '이벤트' 메뉴에 노출되는 항목"
+            actions={<Button onClick={() => setEditing(empty)}>+ 이벤트 등록</Button>} />
+          <Card>
+            <Table head={['이미지', '이벤트명', '가격', '기간', '노출', '관리']}>
+              {state.events.length === 0 ? <EmptyRow colSpan={6} /> : state.events.map(ev => (
+                <tr key={ev.id} className="hover:bg-bg-card">
+                  <td className="px-4 py-3">
+                    <div className="w-20 aspect-[350/250] rounded bg-bg overflow-hidden">
+                      {ev.image && <img src={imgUrl(ev.image)} alt="" className="w-full h-full object-cover" loading="lazy" />}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-medium">{ev.title}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{won(ev.price)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{ev.start || ev.end ? `${ev.start || '-'} ~ ${ev.end || '-'}` : '상시'}</td>
+                  <td className="px-4 py-3"><Toggle label="노출" checked={ev.visible} onChange={(v) => dispatch({ type: 'update', key: 'events', id: ev.id, patch: { visible: v } })} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Button size="sm" variant="secondary" onClick={() => setEditing(ev)}>수정</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmId(ev.id)} className="hover:!text-danger">삭제</Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          </Card>
+          {editing && <EventForm initial={editing} onClose={() => setEditing(null)} onSave={save} />}
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 이벤트를 삭제할까요?"
+            onConfirm={() => { dispatch({ type: 'remove', key: 'events', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+        </>
+      );
+    }
+
+    function EventForm({ initial, onClose, onSave }) {
+      const [f, setF] = useState(initial);
+      const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+      return (
+        <Modal isOpen onClose={onClose} title={f.id ? '이벤트 수정' : '이벤트 등록'}
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={() => onSave(f)}>저장</Button></>}>
+          <div className="space-y-4">
+            <Input id="ev-title" label="이벤트명" value={f.title} onChange={set('title')} />
+            <Input id="ev-price" type="number" min="0" label="가격 (0이면 '가격 상담' 표시)" value={f.price} onChange={set('price')} />
+            <Input id="ev-image" label="이미지 경로 또는 URL" value={f.image} onChange={set('image')} placeholder="/UPLOAD/BOARD/EVENT/..." />
+            <div className="grid grid-cols-2 gap-3">
+              <Input id="ev-start" type="date" label="시작일" value={f.start} onChange={set('start')} />
+              <Input id="ev-end" type="date" label="종료일" value={f.end} onChange={set('end')} />
+            </div>
+            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 노출</div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 팝업 관리
+    // ========================================
+    function PopupsPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [editing, setEditing] = useState(null);
+      const [confirmId, setConfirmId] = useState(null);
+      const empty = { title: '', image: '', link: '', start: '', end: '', visible: true };
+
+      const save = (data) => {
+        if (!data.title.trim()) return toast('팝업 제목을 입력하세요.');
+        if (data.id) dispatch({ type: 'update', key: 'popups', id: data.id, patch: data });
+        else dispatch({ type: 'add', key: 'popups', item: data });
+        setEditing(null);
+        toast('저장되었습니다.');
+      };
+
+      return (
+        <>
+          <PageHeader title="팝업 관리" desc="홈페이지 첫 화면에 뜨는 공지 팝업 (여러 개면 슬라이드로 표시)"
+            actions={<Button onClick={() => setEditing(empty)}>+ 팝업 등록</Button>} />
+          <Card>
+            <Table head={['제목', '링크', '기간', '노출', '관리']}>
+              {state.popups.length === 0 ? <EmptyRow colSpan={5} text="등록된 팝업이 없습니다." /> : state.popups.map(p => (
+                <tr key={p.id} className="hover:bg-bg-card">
+                  <td className="px-4 py-3 font-medium">{p.title}</td>
+                  <td className="px-4 py-3 text-ink-light max-w-[240px] truncate">{p.link || '-'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{p.start || p.end ? `${p.start || '-'} ~ ${p.end || '-'}` : '상시'}</td>
+                  <td className="px-4 py-3"><Toggle label="노출" checked={p.visible} onChange={(v) => dispatch({ type: 'update', key: 'popups', id: p.id, patch: { visible: v } })} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Button size="sm" variant="secondary" onClick={() => setEditing(p)}>수정</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmId(p.id)} className="hover:!text-danger">삭제</Button>
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          </Card>
+          {editing && (
+            <PopupForm initial={editing} onClose={() => setEditing(null)} onSave={save} />
+          )}
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 팝업을 삭제할까요?"
+            onConfirm={() => { dispatch({ type: 'remove', key: 'popups', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+        </>
+      );
+    }
+
+    function PopupForm({ initial, onClose, onSave }) {
+      const [f, setF] = useState(initial);
+      const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+      return (
+        <Modal isOpen onClose={onClose} title={f.id ? '팝업 수정' : '팝업 등록'}
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={() => onSave(f)}>저장</Button></>}>
+          <div className="space-y-4">
+            <Input id="pp-title" label="제목" value={f.title} onChange={set('title')} />
+            <Input id="pp-image" label="이미지 URL (권장 800×440)" value={f.image} onChange={set('image')} />
+            <Input id="pp-link" label="클릭 시 이동 링크" value={f.link} onChange={set('link')} placeholder="https://" />
+            <div className="grid grid-cols-2 gap-3">
+              <Input id="pp-start" type="date" label="시작일" value={f.start} onChange={set('start')} />
+              <Input id="pp-end" type="date" label="종료일" value={f.end} onChange={set('end')} />
+            </div>
+            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 노출</div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 접속 통계
+    // ========================================
+    function StatsPage() {
+      const { state } = useStore();
+      const total = state.visits.reduce((s, v) => s + v.count, 0);
+      const avg = Math.round(total / Math.max(1, state.visits.length));
+      const peak = state.visits.reduce((a, b) => (b.count > a.count ? b : a), state.visits[0] || { count: 0, date: '' });
+      return (
+        <>
+          <PageHeader title="접속 통계" desc="최근 14일 (예시 데이터)" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="p-5"><p className="text-sm text-ink-light">14일 합계</p><p className="mt-2 text-3xl font-bold">{total.toLocaleString('ko-KR')}</p></Card>
+            <Card className="p-5"><p className="text-sm text-ink-light">일 평균</p><p className="mt-2 text-3xl font-bold">{avg.toLocaleString('ko-KR')}</p></Card>
+            <Card className="p-5"><p className="text-sm text-ink-light">최다 방문일</p><p className="mt-2 text-3xl font-bold text-brand">{peak.count}<span className="ml-2 text-sm font-normal text-ink-light">{fmtDate(peak.date)}</span></p></Card>
+          </div>
+          <Card className="mt-6 p-5"><VisitChart data={state.visits} /></Card>
+          <Card className="mt-6">
+            <Table head={['날짜', '방문자']}>
+              {[...state.visits].reverse().map(v => (
+                <tr key={v.date}><td className="px-4 py-2.5">{fmtDate(v.date)}</td><td className="px-4 py-2.5">{v.count.toLocaleString('ko-KR')}</td></tr>
+              ))}
+            </Table>
+          </Card>
+        </>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 사이트 설정
+    // ========================================
+    function SettingsPage() {
+      const { state, dispatch } = useStore();
+      const toast = useToast();
+      const [f, setF] = useState(state.settings);
+      const [resetOpen, setResetOpen] = useState(false);
+      const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+      const fields = [
+        ['clinicName', '병원명'], ['ceo', '대표자'], ['bizNo', '사업자 등록번호'], ['phone', '상담 전화'], ['email', '이메일'],
+        ['hoursWeekday', '진료시간 (월-금)'], ['hoursSat', '진료시간 (토)'], ['lunch', '점심시간'],
+      ];
+      return (
+        <>
+          <PageHeader title="사이트 설정" desc="푸터·오시는 길·상단 띠 배너에 표시되는 정보" />
+          <Card className="p-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              {fields.map(([k, label]) => <Input key={k} id={`st-${k}`} label={label} value={f[k]} onChange={set(k)} />)}
+              <Input id="st-address" label="주소" value={f.address} onChange={set('address')} className="md:col-span-2" />
+              <Input id="st-banner" label="상단 띠 배너 문구" value={f.topBanner} onChange={set('topBanner')} className="md:col-span-2" />
+            </div>
+            <div className="mt-6 flex flex-wrap justify-between gap-2">
+              <Button variant="ghost" onClick={() => setResetOpen(true)} className="hover:!text-danger">예시 데이터 초기화</Button>
+              <Button onClick={() => { dispatch({ type: 'settings', patch: f }); toast('설정이 저장되었습니다.'); }}>저장</Button>
+            </div>
+          </Card>
+          <Modal isOpen={resetOpen} onClose={() => setResetOpen(false)} title="예시 데이터 초기화" size="sm"
+            footer={<><Button variant="secondary" onClick={() => setResetOpen(false)}>취소</Button>
+              <Button variant="danger" onClick={() => { dispatch({ type: 'reset' }); setF(SEED.settings); setResetOpen(false); toast('초기화되었습니다.'); }}>초기화</Button></>}>
+            <p className="text-sm leading-6">이 브라우저에 저장된 모든 변경 내용을 지우고 처음 예시 데이터로 되돌립니다.</p>
+          </Modal>
+        </>
+      );
+    }
+
+    function NotFoundPage() {
+      return (
+        <Card className="py-24 text-center">
+          <p className="text-5xl font-bold text-brand">404</p>
+          <p className="mt-3 text-ink-mid">페이지를 찾을 수 없습니다.</p>
+          <Link to="/" className="inline-block mt-6 text-sm text-brand hover:underline">대시보드로</Link>
+        </Card>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+    function App() {
+      // 'checking' → 서버에 세션 확인 중 / null → 로그아웃 상태 / 객체 → 로그인한 관리자
+      const [user, setUser] = useState('checking');
+      const [notice, setNotice] = useState('');
+
+      useEffect(() => {
+        api('/me').then(r => setUser(r.user)).catch(() => setUser(null));
+        // 사용 중 토큰이 만료되면(401) 로그인 화면으로
+        onUnauthorized = () => { setUser(null); setNotice('로그인이 만료되었습니다. 다시 로그인해주세요.'); };
+        return () => { onUnauthorized = () => {}; };
+      }, []);
+
+      const login = (u) => { setNotice(''); setUser(u); window.location.hash = '/'; };
+      const logout = async () => {
+        try { await api('/logout', { method: 'POST' }); } catch {}
+        setNotice('로그아웃되었습니다.');
+        setUser(null);
+      };
+
+      if (user === 'checking') {
+        return <div className="min-h-screen flex items-center justify-center"><Spinner label="로그인 상태 확인 중…" /></div>;
+      }
+      if (!user) return <LoginPage onLogin={login} notice={notice} />;
+
+      return (
+        <StoreProvider>
+          <ToastProvider>
+            <Router>
+              <Header user={user} onLogout={logout} />
+              <DemoNotice />
+              <main className="max-w-[1600px] mx-auto px-5 py-8">
+                <Routes fallback={<NotFoundPage />}>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/consults" element={<ConsultsPage />} />
+                  <Route path="/members" element={<MembersPage />} />
+                  <Route path="/reviews" element={<ReviewsPage />} />
+                  <Route path="/photos" element={<PhotosPage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/popups" element={<PopupsPage />} />
+                  <Route path="/stats" element={<StatsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Routes>
+              </main>
+            </Router>
+          </ToastProvider>
+        </StoreProvider>
+      );
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

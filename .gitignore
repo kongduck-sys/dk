@@ -1,0 +1,19 @@
+# 의존성
+node_modules/
+
+# 비밀 값 (DB 접속 주소·JWT 키) — 절대 커밋 금지
+.env
+.env.local
+.env.*.local
+
+# 배포·도구 산출물
+.vercel/
+.playwright-mcp/
+
+# 로컬 개발 도구 설정 (웹사이트 코드 아님)
+.claude/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
