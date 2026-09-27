@@ -1,0 +1,8 @@
+# Vercel 업로드 제외 (배포에 불필요하거나 민감한 로컬 파일)
+.env
+.env.*
+!.env.example
+node_modules
+.claude
+.playwright-mcp
+.git
