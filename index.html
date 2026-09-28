@@ -117,6 +117,8 @@
     const INTRO_TABS = [
       { label: '원장 소개', href: '/introduction' },
       { label: '차별점', href: '/setsus_apart' },
+      { label: '공간 둘러보기', href: '/space' },
+      { label: '오시는 길', href: '/location' },
     ];
     const PROCEDURE_TABS = [
       { label: '탄력관리', href: '/procedure/elasticity' },
@@ -128,8 +130,8 @@
     // 기존 상세(가슴·힙·지흡·지방파괴·이중턱·페이스)는 '전체 프로그램' 하단에서 연결
     const PROGRAM_TABS = [
       { label: '전체 프로그램', href: '/program' },
-      { label: '쉐딩주사', href: '/program/shading' },
-      { label: '여리주사', href: '/program/yeori' },
+      { label: '쉐딩 패키지', href: '/program/shading' },
+      { label: '여리 패키지', href: '/program/yeori' },
       { label: '팔뚝 슬림', href: '/program/arm' },
       { label: '승모근 슬림', href: '/program/shoulder' },
       { label: '종아리 슬림', href: '/program/calf' },
@@ -137,7 +139,7 @@
     ];
 
     const NAV = [
-      { label: '한의원 소개', href: '/introduction', sub: INTRO_TABS },
+      { label: '라인앤코', href: '/introduction', sub: INTRO_TABS },
       { label: '메이크라인 다이어트', href: '/makeline_diet', sub: [] },
       { label: '시술소개', href: '/procedure/elasticity', sub: PROCEDURE_TABS },
       { label: '프로그램', href: '/program', sub: PROGRAM_TABS },
@@ -155,29 +157,41 @@
     // ⚠️ 의료법 제56조: 효과 보장·최상급·'부작용 없음'·'완성' 등 단정 표현 사용 금지
     // 레이아웃: 가운데 정렬 · 브랜드(세리프) → 한 줄 카피(가는 줄 + 굵은 줄) → 영문 한 줄
     // 이미지: Unsplash License(상업적 무료, 출처 표기 의무 없음)
-    //   body  photo-1606628697412-0cc4a23031c4 / line photo-1586211082529-b7c6b640abff / skin photo-1581182800629-7d90925ad072
-    const unsplashHero = (id, pos = 'center') => ({
+    //   1 body   photo-1663475986058-a4a06c5f9b8e  (소프트 그레이 톤, 우아한 포즈)
+    //   2 line   photo-1682595950940-4d8e27891105  (화이트 드레스 허리 라인)
+    //   3 thread photo-1650056201297-4a6d7ec6ca6c  (흑백 옆모습 — 콧대·턱선)
+    //   4 skin   photo-1728727217834-b190862837a3  (맑은 피부, 밝은 표정)
+    // overlay: 밝은 사진은 어둡게 덮는 정도를 줄여 긍정적인 분위기 유지(흰 글씨 가독성은 확보)
+    const unsplashHero = (id, pos = 'center', overlay = 'bg-black/35') => ({
       src: `https://images.unsplash.com/photo-${id}?w=2000&q=80&auto=format&fit=crop`,
       srcMobile: `https://images.unsplash.com/photo-${id}?w=900&h=1400&q=80&auto=format&fit=crop&crop=focalpoint`,
-      pos,
+      pos, overlay,
     });
     const HERO_SLIDES = [
       {
-        image: unsplashHero('1606628697412-0cc4a23031c4', '70% center'),
+        image: unsplashHero('1663475986058-a4a06c5f9b8e', '62% center', 'bg-black/25'),
+        pcShift: 'md:scale-[1.25] md:origin-left', // 얼굴을 오른쪽으로
         light: '체중이 아닌,', bold: '라인을 디자인합니다',
         en: 'Body contouring, beyond the scale.',
         more: { label: '바디 프로그램', to: '/program' },
       },
       {
-        image: unsplashHero('1586211082529-b7c6b640abff', 'center'),
+        image: unsplashHero('1682595950940-4d8e27891105', 'center 55%', 'bg-black/30'),
         light: '절개 없이,', bold: '더 섬세한 바디 라인',
         en: 'Refined, without a scalpel.',
-        more: { label: '쉐딩주사', to: '/program/shading' },
+        more: { label: '쉐딩 패키지', to: '/program/shading' },
       },
       {
-        image: unsplashHero('1581182800629-7d90925ad072', 'center 30%'),
-        light: '피부 속부터 차오르는', bold: '결과 탄력',
-        en: 'Radiance begins beneath the skin.',
+        image: unsplashHero('1650056201297-4a6d7ec6ca6c', '30% center', 'bg-black/30'),
+        light: '코끝부터 턱선까지,', bold: '실로 디자인하는|얼굴 라인',
+        en: 'Nose & face thread lifting.',
+        more: { label: '코프팅 · 실리프팅', to: '/procedure/contour' },
+      },
+      {
+        image: unsplashHero('1728727217834-b190862837a3', 'center 35%', 'bg-black/25'),
+        pcShift: 'md:scale-[1.2] md:origin-right', // 얼굴을 왼쪽으로
+        light: '부족한 곳은 채우고,|과한 곳은 덜어내어', bold: '균형 잡힌 볼륨으로',
+        en: 'Fill what' + String.fromCharCode(8217) + 's missing, refine what' + String.fromCharCode(8217) + 's too much.',
         more: { label: '스킨부스터', to: '/procedure/facial' },
       },
     ];
@@ -197,15 +211,6 @@
       { img: 'home_management_3.png', ko: '울핏', en: 'Ulfit' },
       { img: 'home_management_5.png', ko: '미쿨', en: 'Micool' },
       { img: 'home_management_6.png', ko: '트리플바디', en: 'Triple Body' },
-    ];
-
-    const TARGETS = [
-      { icon: 'home_target_1.svg', title: '운동할 시간이 부족한 분들',
-        desc: '볼륨 있는 라인을 만들기 위해 운동을 병행하려 하지만 시간적으로 여유가 없으신 분들에게 권해드립니다.' },
-      { icon: 'home_target_2.svg', title: '단 기간에 체중을 감량하시려는 분들',
-        desc: '웨딩 촬영 / 바디프로필 촬영 / 공연 등 중요한 일정을 앞두었지만 탄력저하가 우려되는 분들에게 권해드립니다.' },
-      { icon: 'home_target_3.svg', title: '탄력 저하와 처짐이 고민인 중장년층',
-        desc: '노화로 인한 피부의 탄력 저하 및 살 처짐 현상이 걱정되는 중장년층 분들에게 권해드립니다.' },
     ];
 
     const GALLERY = [11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `${IMG}/home_around_view_${n}.png`);
@@ -658,20 +663,25 @@
             <div key={i} className={`hero-slide absolute inset-0 ${i === index ? 'opacity-100 z-[1]' : 'opacity-0 z-0'}`} aria-hidden={i !== index}>
               <picture>
                 <source media="(min-width: 768px)" srcSet={s.image.src} />
-                <img src={s.image.srcMobile} alt="" className="w-full h-full object-cover" style={{ objectPosition: s.image.pos }} />
+                <img src={s.image.srcMobile} alt="" className={`w-full h-full object-cover ${s.pcShift || ''}`} style={{ objectPosition: s.image.pos }} />
               </picture>
               {/* 흰 글씨 가독성: 전체를 살짝 어둡게 + 가운데 부드러운 비네트 */}
-              <div className="absolute inset-0 bg-black/35" />
+              <div className={`absolute inset-0 ${s.image.overlay}`} />
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0)_65%)]" />
 
               {/* 위치(가운데 정렬)는 바깥 flex 가 담당 — 등장 애니메이션(transform)이 위치를 덮어쓰지 않도록 안쪽 요소에만 적용
                   pt: 상단 헤더 높이만큼(모바일 60 · PC 125), pb: 하단 슬라이드 컨트롤 영역만큼 비워서 '보이는 영역'의 정중앙에 배치 */}
               <div className="absolute inset-0 flex items-center justify-center px-6 pt-[60px] pc:pt-[125px] pb-[120px] md:pb-[138px] pc:pb-[78px]">
               <div className={`w-full max-w-[900px] text-center text-white ${i === index ? 'hero-in' : ''}`}>
-                <p className="font-prata text-sm md:text-lg tracking-[3px] uppercase text-white/85">Line &amp; Co</p>
+                {/* 로고 워드마크(logo.svg, 윤곽선 글자)를 흰색으로 표시 — 로고와 동일한 서체 */}
+                <img src={img('logo.svg')} alt="LINE&CO" className="h-[14px] md:h-[20px] w-auto mx-auto brightness-0 invert opacity-90" />
                 <h2 className="mt-8 md:mt-12 break-keep">
-                  <span className="block text-[22px] md:text-[34px] font-light leading-[1.4] text-white/90">{s.light}</span>
-                  <span className="block mt-1 md:mt-2 text-[32px] md:text-[52px] font-bold leading-[1.3] tracking-[-0.5px]">{s.bold}</span>
+                  <span className="block text-[22px] md:text-[34px] font-light leading-[1.4] text-white/90">
+                    {s.light.split('|').map((t, j, arr) => <React.Fragment key={j}>{t}{j < arr.length - 1 && <><br className="md:hidden" /><span className="hidden md:inline"> </span></>}</React.Fragment>)}
+                  </span>
+                  <span className="block mt-1 md:mt-2 text-[32px] md:text-[52px] font-bold leading-[1.3] tracking-[-0.5px]">
+                    {s.bold.split('|').map((t, j, arr) => <React.Fragment key={j}>{t}{j < arr.length - 1 && <><br className="md:hidden" /><span className="hidden md:inline"> </span></>}</React.Fragment>)}
+                  </span>
                 </h2>
                 <p className="mt-5 md:mt-7 font-prata italic text-sm md:text-xl text-white/85">{s.en}</p>
                 <div className="mt-10 md:mt-14 flex items-center justify-center gap-3">
@@ -715,105 +725,129 @@
       );
     }
 
-    function ProgramSection() {
+    // ----------------------------------------
+    // 홈 — 바디 시술 우선 구성 (블로그 기준 패키지 구성 반영)
+    //   쉐딩 패키지: 리바이브(극초단파) + 쉐딩주사  / 팔뚝·복부
+    //   여리 패키지: 여리침 → 리바이브 → 여리주사 + 체형교정 / 승모근·종아리
+    // ----------------------------------------
+    const HOME_PACKAGES = [
+      {
+        key: 'shading', to: '/program/shading', img: 'pro_part_6.png',
+        en: 'SHADING PACKAGE', name: '쉐딩 패키지', area: '팔뚝 · 복부',
+        copy: '탄력은 채우고, 군살은 덜어내는 바디 라인 케어',
+        steps: [
+          { t: '리바이브', d: '극초단파 에너지로 피부 깊은 층 탄력 케어' },
+          { t: '쉐딩주사', d: '지방·붓기가 고인 부위를 디자인해 주입' },
+        ],
+      },
+      {
+        key: 'yeori', to: '/program/yeori', img: 'pro_part_3.png',
+        en: 'YEORI PACKAGE', name: '여리 패키지', area: '승모근 · 종아리',
+        copy: '뭉친 근육은 풀고, 솟은 라인은 여리하게',
+        steps: [
+          { t: '여리침', d: '과하게 긴장된 근육의 긴장도 완화' },
+          { t: '리바이브', d: '목·어깨로 이어지는 라인 정돈' },
+          { t: '여리주사', d: '근육 이완 약침으로 섬세하게 마무리' },
+          { t: '체형교정', d: '라인을 무너뜨리는 자세까지 함께' },
+        ],
+        note: '종아리는 여리주사 + 리바이브로 진행합니다.',
+      },
+    ];
+
+    const HOME_FACE_SKIN = [
+      // 코프팅 이미지: Unsplash License (photo-1626362337699-9b020ec8e716, 옆모습 콧대 라인)
+      { to: '/procedure/contour', img: 'https://images.unsplash.com/photo-1626362337699-9b020ec8e716?w=900&q=80&auto=format&fit=crop', en: 'NOSE THREAD LIFT', name: '코프팅', desc: '녹는 PDO 실로 콧대와 코끝의 높이·각도를 디자인하는 코 실리프팅' },
+      { to: '/procedure/contour', img: 'procedure_contour_region_5.png', en: 'FACE THREAD LIFT', name: '동안 실리프팅', desc: '이중턱 · 팔자 · V라인까지, 얼굴 처짐을 고려한 실리프팅' },
+      { to: '/procedure/facial', img: 'pro_face_PLLA.png', en: 'SKIN BOOSTER', name: '스킨부스터', desc: '꺼진 부위를 채우는 볼류머샷, 맑은 톤을 위한 미백주사' },
+    ];
+
+    function HomeHeading({ en, title, desc }) {
       return (
-        <section className="pb-24 md:pb-[150px]">
-          <Container>
-            <SectionTitle title={<>각자가 생각하는 워너비 몸매<br />누구나 가능합니다</>} />
+        <div className="text-center">
+          <p className="font-roboto text-[11px] md:text-xs tracking-[3px] text-mint-700">{en}</p>
+          <h2 className="mt-3 font-serif font-light text-[26px] md:text-[38px] leading-[1.45] text-ink-dark"><Lines text={title} /></h2>
+          {desc && <p className="mt-4 text-sm md:text-[15px] leading-[1.8] text-[#666] max-w-[640px] mx-auto">{desc}</p>}
+        </div>
+      );
+    }
 
-            {/* 메이크라인 환 */}
-            <article className="mt-16 md:mt-[100px]">
-              <SubTitle title="메이크라인 환">
-                초저분자펩타이드피쉬콜라겐<br className="md:hidden" />(low-molecular-weight peptide fish collagen)과<br className="md:hidden" /> GMP 인증받은 100% 정품 한약재를 사용합니다.
-              </SubTitle>
+    // ⓪ 브랜드 슬로건 — 배너 바로 아래 (원장 사진·경력 등 상세는 '라인앤코' 메뉴 페이지에서)
+    // ※ 의료법 제56조: 최상급·검증 불가 표현 없이 태도와 가치를 전달
+    const BRAND_VALUES = [
+      { en: 'Expertise', ko: '전문의가 직접 보는 라인' },
+      { en: 'Aesthetic', ko: '과하지 않은 절제된 미감' },
+      { en: 'Balance', ko: '나에게 어울리는 균형' },
+    ];
 
-              <div className="mt-10 md:mt-14 bg-cream-dark/50 px-6 py-8 md:px-14 md:py-10 flex flex-col md:flex-row md:items-center gap-5 md:gap-14">
-                <h3 className="font-serif text-lg md:text-xl text-ink-dark shrink-0">메이크라인 환의 특별함</h3>
-                <ul className="space-y-2 text-sm md:text-[15px] leading-7 list-disc pl-5 marker:text-mint">
-                  <li>체내 흡수율을 극대화한 펩타이드 형태의 초저분자 펩타이드 피쉬콜라겐을 사용</li>
-                  <li>GMP 인증 100% 정품 한약재 활용</li>
-                  <li>원장님이 직접 선별한 고품질 원료와 최신 생산 기술로 만들어진 한약</li>
+    function BrandStatementSection() {
+      return (
+        <section className="bg-cream">
+          <div className="grid lg:grid-cols-2 items-stretch">
+            <div className="flex items-center px-6 py-20 md:px-16 lg:px-[max(4rem,calc((100vw-1180px)/2))] lg:py-[140px] order-2 lg:order-1">
+              <div className="max-w-[560px]">
+                <p className="font-prata italic text-sm md:text-base text-mint-700">We find your hidden line.</p>
+                <h2 className="mt-6 font-serif font-light text-[30px] md:text-[38px] xl:text-[42px] leading-[1.4] text-ink-dark">
+                  <span className="md:whitespace-nowrap">보이지 않던 라인을 찾아,</span><br />
+                  <span className="md:whitespace-nowrap">가장 나다운 균형으로</span>
+                </h2>
+                <p className="mt-7 text-[15px] md:text-base leading-[1.9] text-[#555]">
+                  체형과 근육을 읽는 전문의의 시선, 그리고 과하지 않은 미감.
+                  라인앤코는 모두에게 같은 몸이 아닌, 한 사람에게 어울리는 라인을 디자인합니다.
+                </p>
+                <ul className="mt-12 grid grid-cols-3 border-t border-black/15">
+                  {BRAND_VALUES.map(v => (
+                    <li key={v.en} className="pt-5 pr-3">
+                      <p className="font-prata italic text-lg md:text-xl text-ink-dark">{v.en}</p>
+                      <p className="mt-1.5 text-[12px] md:text-[13px] leading-[1.6] text-[#666]">{v.ko}</p>
+                    </li>
+                  ))}
                 </ul>
               </div>
-
-              <div className="mt-10 md:mt-14 space-y-6">
-                {PRODUCTS.map(p => (
-                  <div key={p.name} className="flex flex-col md:flex-row bg-cream overflow-hidden">
-                    <div className="md:w-[380px] shrink-0 aspect-[4/3] md:aspect-auto bg-white">
-                      <img src={`${IMG}/${p.img}`} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                    <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
-                      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
-                        <h3 className={`${p.color} text-white font-serif text-lg px-5 py-1.5 self-start`}>{p.name}</h3>
-                        <h5 className="text-[15px] md:text-lg font-medium text-ink-dark">{p.tag}</h5>
-                      </div>
-                      <p className="mt-4 md:mt-5 text-sm md:text-[15px] leading-[1.8] text-[#555]">{p.desc}</p>
-                    </div>
-                  </div>
-                ))}
+            </div>
+            <div className="relative min-h-[360px] md:min-h-[520px] order-1 lg:order-2 overflow-hidden">
+              <img src={img('home_initial_bg.png')} alt="라인앤코한의원 공간" loading="lazy" className="absolute inset-0 w-full h-full object-cover object-[35%_center]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+              <div className="absolute left-6 bottom-6 md:left-10 md:bottom-10 flex items-center gap-3 text-white/90">
+                <img src={img('logo.svg')} alt="LINE&CO" className="h-[12px] md:h-[15px] w-auto brightness-0 invert" />
+                <span className="font-roboto text-[11px] md:text-xs tracking-[3px]">GANGNAM</span>
               </div>
-            </article>
-
-            <Hr />
-
-            {/* 피쉬 콜라겐 */}
-            <article>
-              <SubTitle title="초저분자 펩타이트 피쉬 콜라겐">
-                피부뿐 아니라 전신의 탄력을 유지하는 데<br className="md:hidden" /> 도움을 주는 펩타이드 콜라겐입니다.<br />
-                체중 감량 후에도 탄력 있는 몸매와 피부 유지에 기여하는 성분을 포함하여 주름 개선뿐 아니라 신체의 탄력 증진 및 S라인 유지에 영향을 줄 수 있습니다.
-              </SubTitle>
-              <div className="mt-10 md:mt-14 grid md:grid-cols-2 gap-6">
-                {[1, 2].map(n => (
-                  <picture key={n} className="block bg-cream p-4">
-                    <source media="(min-width: 768px)" srcSet={`${IMG}/home_chart_${n}.svg`} />
-                    <img src={`${IMG}/home_chart_m_${n}.svg`} alt="피쉬 콜라겐 비교 차트" className="w-full" loading="lazy" />
-                  </picture>
-                ))}
-              </div>
-            </article>
-
-            <Hr />
-
-            {/* 관리 기기 */}
-            <article>
-              <SubTitle title={<>비만 전문 한방재활의학과<br className="md:hidden" /> 전문의의 체계적인 관리</>}>
-                다이어트를 위한 프리미엄 바디 라인 관리 기기와<br className="md:hidden" /> 리프팅 기기를 보유하고 있습니다.<br />
-                바디라인 관리와 피부 탄력 회복을 동시에 해결하며<br className="md:hidden" /> 체지방 분해, 셀룰라이트 감소, 피부 탄력 개선 등<br className="md:hidden" /> 다양한 효과를 제공합니다.
-              </SubTitle>
-              <div className="mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8">
-                {MACHINES.map(m => (
-                  <div key={m.en} className="text-center">
-                    <div className="aspect-square bg-cream rounded-none overflow-hidden">
-                      <img src={`${IMG}/${m.img}`} alt={m.ko} className="w-full h-full object-contain" loading="lazy" />
-                    </div>
-                    <h5 className="mt-4 text-base font-medium text-ink-dark">{m.ko}</h5>
-                    <p className="font-roboto text-[13px] text-mint-500">{m.en}</p>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </Container>
+            </div>
+          </div>
         </section>
       );
     }
 
-    function TargetSection() {
+    // ① 시그니처 바디 패키지
+    function SignatureBodySection() {
       return (
-        <section className="bg-cream py-24 md:py-[150px]">
+        <section className="py-24 md:py-[140px]">
           <Container>
-            <SectionTitle title="S라인과 탄력을 동시에" sub="MAKE LINE PROGRAM" />
-            <div className="mt-14 md:mt-[120px] grid md:grid-cols-3 gap-[22px]">
-              {TARGETS.map(t => (
-                <Card key={t.title} className="text-center !rounded-none !shadow-none py-12 md:py-14">
-                  {/* 원본 target-list: 흰색 SVG 아이콘을 170px 민트 원 위에 배치 */}
-                  <div className="w-[140px] h-[140px] md:w-[170px] md:h-[170px] mx-auto rounded-full bg-mint flex items-center justify-center">
-                    <img src={`${IMG}/${t.icon}`} alt="" className="max-h-[80px] md:max-h-[100px] max-w-[60%]" />
+            <HomeHeading en="SIGNATURE BODY PACKAGE" title={'팔뚝 · 승모근 · 종아리,\n라인이 달라지는 두 가지 방법'}
+              desc="체중보다 먼저 눈에 띄는 부위의 라인. 원인에 맞춰 약침·침·극초단파 기기·체형교정을 한 패키지로 설계합니다." />
+            <div className="mt-14 md:mt-20 grid lg:grid-cols-2 gap-6">
+              {HOME_PACKAGES.map(p => (
+                <Link key={p.key} to={p.to} className="group flex flex-col bg-cream hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)] transition-shadow">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img src={img(p.img)} alt={`${p.name} — ${p.area}`} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <span className="absolute left-5 top-5 px-3 py-1.5 bg-white/90 text-[12px] tracking-[1px] text-ink-dark">{p.area}</span>
                   </div>
-                  <div className="mt-7">
-                    <h3 className="text-lg font-bold text-ink">{t.title}</h3>
-                    <p className="mt-3 text-sm leading-[1.8] text-[#666] max-w-[300px] mx-auto">{t.desc}</p>
+                  <div className="flex-1 p-7 md:p-10">
+                    <p className="font-roboto text-[11px] tracking-[2.5px] text-mint-700">{p.en}</p>
+                    <h3 className="mt-1.5 font-serif text-[26px] md:text-[30px] text-ink-dark">{p.name}</h3>
+                    <p className="mt-2 text-[15px] text-[#555]">{p.copy}</p>
+                    <ol className="mt-7 border-t border-black/10">
+                      {p.steps.map((s, i) => (
+                        <li key={s.t} className="flex items-baseline gap-4 py-3.5 border-b border-black/10">
+                          <span className="font-prata italic text-mint-700 w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                          <span className="w-20 shrink-0 font-medium text-ink-dark">{s.t}</span>
+                          <span className="text-sm text-[#666]">{s.d}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {p.note && <p className="mt-4 text-[13px] text-mint-700">※ {p.note}</p>}
+                    <span className="mt-7 inline-block text-sm font-medium text-ink-dark border-b border-ink-dark pb-0.5 group-hover:text-mint-700 group-hover:border-mint-700 transition-colors">패키지 자세히 보기 →</span>
                   </div>
-                </Card>
+                </Link>
               ))}
             </div>
           </Container>
@@ -821,7 +855,109 @@
       );
     }
 
-    function GallerySection() {
+    // ② 부위별로 찾기
+    function AreaStripSection() {
+      const areas = [['arm', '/program/arm'], ['shoulder', '/program/shoulder'], ['calf', '/program/calf']];
+      return (
+        <section className="bg-cream py-24 md:py-[120px]">
+          <Container>
+            <HomeHeading en="SLIM BY AREA" title="고민 부위로 찾기" />
+            <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
+              {areas.map(([k, to]) => {
+                const a = AREAS[k];
+                return (
+                  <Link key={k} to={to} className="group relative block aspect-[4/5] overflow-hidden bg-stone">
+                    <img src={img(a.image)} alt={a.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                    <div className="absolute left-0 right-0 bottom-0 p-6 md:p-7 text-white">
+                      <p className="font-roboto text-[11px] tracking-[2.5px] text-white/80">{a.eyebrow}</p>
+                      <h3 className="mt-1 font-serif text-[24px] md:text-[28px]">{a.name}</h3>
+                      <p className="mt-1 text-sm text-white/85"><Lines text={a.headline} /></p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
+    // ③ 페이스 · 스킨
+    function FaceSkinSection() {
+      return (
+        <section className="py-24 md:py-[140px]">
+          <Container>
+            <HomeHeading en="FACE & SKIN" title={'얼굴 라인과 피부 결까지'} desc="바디와 함께 관리하면 좋은 페이스 리프팅과 스킨부스터 프로그램입니다." />
+            <div className="mt-12 md:mt-16 grid md:grid-cols-3 gap-8 md:gap-6">
+              {HOME_FACE_SKIN.map(f => (
+                <Link key={f.name} to={f.to} className="group block">
+                  <div className="aspect-[4/3] overflow-hidden bg-cream">
+                    <img src={img(f.img)} alt={f.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  </div>
+                  <p className="mt-5 font-roboto text-[11px] tracking-[2.5px] text-mint-700">{f.en}</p>
+                  <h3 className="mt-1 font-serif text-[22px] text-ink-dark">{f.name}</h3>
+                  <p className="mt-2 text-sm leading-[1.75] text-[#666]">{f.desc}</p>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
+    // ④ 바디 기기
+    function MachinesSection() {
+      return (
+        <section className="bg-cream py-24 md:py-[120px]">
+          <Container>
+            <HomeHeading en="BODYLINE MACHINE" title="패키지에 함께 쓰는 바디 기기" desc="한방재활의학과 전문의 진료 후, 부위와 목적에 맞는 기기를 조합합니다." />
+            <div className="mt-12 md:mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-8">
+              {MACHINES.map(m => (
+                <div key={m.en} className="text-center">
+                  <div className="aspect-square bg-white overflow-hidden">
+                    <img src={`${IMG}/${m.img}`} alt={m.ko} className="w-full h-full object-contain" loading="lazy" />
+                  </div>
+                  <h5 className="mt-4 text-base font-medium text-ink-dark">{m.ko}</h5>
+                  <p className="font-roboto text-[13px] text-mint-500">{m.en}</p>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
+    // ⑤ 메이크라인 다이어트 (축약)
+    function DietBriefSection() {
+      return (
+        <section className="py-24 md:py-[120px]">
+          <Container>
+            <div className="flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-16">
+              <div className="lg:w-[38%]">
+                <p className="font-roboto text-[11px] md:text-xs tracking-[3px] text-mint-700">MAKELINE DIET</p>
+                <h2 className="mt-3 font-serif font-light text-[26px] md:text-[34px] leading-[1.45] text-ink-dark">체중 관리가 함께 필요하다면,<br />메이크라인 환</h2>
+                <p className="mt-4 text-sm md:text-[15px] leading-[1.85] text-[#666]">원하는 체형에 따라 슬래머 · 슬리머 · 슬랜더 중 맞춤 처방하는 라인앤코의 다이어트 환입니다. 바디 시술과 함께 진행할 수 있습니다.</p>
+                <Link to="/makeline_diet" className="btn-line-dark mt-8">메이크라인 다이어트 보기 →</Link>
+              </div>
+              <div className="flex-1 grid grid-cols-3 gap-3 md:gap-4">
+                {PRODUCTS.map(p => (
+                  <Link key={p.name} to="/makeline_diet" className="group block">
+                    <div className="aspect-square overflow-hidden bg-cream">
+                      <img src={`${IMG}/${p.img}`} alt={p.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    </div>
+                    <p className="mt-3 text-center font-serif text-base md:text-lg text-ink-dark">{p.name}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
+    // compact: 서브페이지 안에서 쓸 때 상단 여백 축소
+    function GallerySection({ compact = false }) {
       const [active, setActive] = useState(0);
       const thumbsRef = useRef(null);
 
@@ -839,7 +975,7 @@
       }, [active]);
 
       return (
-        <section className="py-24 md:py-[150px]">
+        <section className={compact ? 'pt-2 md:pt-4 pb-10' : 'py-24 md:py-[150px]'}>
           <Container>
             <SectionTitle title={<>숨겨진 아름다움을<br className="md:hidden" /> 찾아드리는 공간</>} sub="라인앤코한의원 둘러보기" subKo />
             <div className="mt-12 md:mt-[80px] flex flex-col lg:flex-row gap-[10px] lg:h-[560px]">
@@ -872,7 +1008,7 @@
           </div>
           <div className="md:w-1/2 flex items-center px-8 py-16 md:px-[100px]">
             <div>
-              <img src={`${IMG}/logo.svg`} alt="라인앤코한의원" className="h-14" />
+              <img src={`${IMG}/logo.svg`} alt="라인앤코한의원" className="h-[22px] w-auto" />
               <p className="mt-10 text-[15px] md:text-base leading-[1.9] tracking-[-0.48px] text-ink">
                 라인앤코한의원에서는 무리한<br />
                 식이 제한과 운동을 강요하지 않습니다.<br />
@@ -887,11 +1023,54 @@
       );
     }
 
-    function LocationSection() {
+    // 피쉬 콜라겐: 강조를 줄인 요약 띠 — 차트는 '자세히 보기'를 눌렀을 때만 표시
+    function CollagenNote() {
+      const [open, setOpen] = useState(false);
+      // 약재 구성 섹션의 PLUS 카드를 누르면 차트를 펼쳐서 보여줌
+      useEffect(() => {
+        const onOpen = () => setOpen(true);
+        window.addEventListener('open-collagen', onOpen);
+        return () => window.removeEventListener('open-collagen', onOpen);
+      }, []);
       return (
-        <section className="py-24 md:py-[150px]">
+        <section id="collagen-note" className="py-14 md:py-20 border-t border-black/10 scroll-mt-[70px]">
+          <Container className="max-w-[980px]">
+            <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-12">
+              <div className="flex-1">
+                <p className="font-roboto text-[11px] tracking-[3px] text-mint-700">INGREDIENT</p>
+                <h3 className="mt-2 font-serif text-xl md:text-2xl text-ink-dark">메이크라인 환의 초저분자 피쉬 콜라겐</h3>
+                <p className="mt-3 text-sm md:text-[15px] leading-[1.8] text-[#666]">
+                  분자량이 작은 펩타이드 형태의 피쉬 콜라겐을 사용해, 체중 관리 중 피부와 몸의 탄력 관리를 함께 돕습니다.
+                </p>
+              </div>
+              <button onClick={() => setOpen(o => !o)} aria-expanded={open} aria-controls="collagen-charts"
+                className="btn-line-dark self-start md:self-auto shrink-0">
+                {open ? '접기' : '자세히 보기'} <span aria-hidden="true">{open ? '−' : '+'}</span>
+              </button>
+            </div>
+            <div id="collagen-charts" className={`grid transition-all duration-500 ${open ? 'grid-rows-[1fr] mt-10' : 'grid-rows-[0fr]'}`}>
+              <div className="overflow-hidden">
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[1, 2].map(n => (
+                    <picture key={n} className="block bg-cream p-4">
+                      <source media="(min-width: 768px)" srcSet={`${IMG}/home_chart_${n}.svg`} />
+                      <img src={`${IMG}/home_chart_m_${n}.svg`} alt="피쉬 콜라겐 흡수율 비교 차트" className="w-full" loading="lazy" />
+                    </picture>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
+    // compact: 서브페이지 안에서 쓸 때 상단 여백 축소 (SubLayout 탭 아래 이중 여백 방지)
+    function LocationSection({ compact = false }) {
+      return (
+        <section className={compact ? 'pt-2 md:pt-4 pb-10' : 'py-24 md:py-[150px]'}>
           <Container>
-            <SectionTitle title="인생 마지막 다이어트" sub="강남역에서 시작합니다" subKo />
+            <SectionTitle title="강남역에서 만나는 라인앤코" sub="강남역 10번 출구 도보 3분" subKo />
             <div className="mt-12 md:mt-[80px]">
               <div className="w-full h-[300px] md:h-[440px] bg-cream">
                 <iframe title="라인앤코한의원 위치 지도" className="w-full h-full border-0" loading="lazy"
@@ -939,7 +1118,7 @@
       return (
         <section className="pb-24 md:pb-[100px]">
           <Container className="max-w-[980px]">
-            <SectionTitle title="라인앤코 원장이 직접 답변드립니다." />
+            <SectionTitle title={<span className="font-prata">FAQ</span>} />
             <FaqList items={FAQS} />
           </Container>
         </section>
@@ -980,12 +1159,16 @@
       return (
         <main>
           <HeroSection />
+          {/* 전문성 → 바디 시술 → 페이스·스킨 → 기기 → 다이어트(축약) → 병원 소개 */}
+          <BrandStatementSection />
+          <SignatureBodySection />
+          <AreaStripSection />
+          <FaceSkinSection />
+          <MachinesSection />
+          <DietBriefSection />
           <VideoSection />
-          <ProgramSection />
-          <TargetSection />
-          <GallerySection />
-          <PhilosophySection />
-          <LocationSection />
+          {/* 공간 둘러보기 → '라인앤코 > 공간 둘러보기', 철학·콜라겐 → 메이크라인 다이어트 페이지로 이동 */}
+          {/* 오시는 길은 GNB '라인앤코 > 오시는 길'(#/location) 페이지로 이동 */}
           <FaqSection />
         </main>
       );
@@ -1267,11 +1450,6 @@
     // 📄 Sub Pages — 한의원 소개
     // ========================================
     function IntroductionPage() {
-      const career = [
-        '현)라인앤코한의원 원장', '로담한의원 잠실점 진료원장', '로아한의원 부천점 진료원장', '광덕안정한의원 종로점 진료원장',
-        '광동한방병원 일반수련의 수료', '동국대학교 한의과대학 졸업', '경희대학교 한방안이비인후피부과 석사 과정',
-        '한방미성형학회 정회원', '한방비만학회 정회원', '스포츠한의학회 정회원', '척추신경추나의학회 정회원',
-      ];
       const promises = [
         { n: 1, title: '능동적인 태도로 융합적 치료를 지향합니다.', text: '원인을 치료하는 한의학을 토대로 현대적 의료기기를\n적극적으로 사용하여 치료의 정확성과 안전성을\n최대한으로 높이고자 합니다.' },
         { n: 2, title: '본질에 집중하는 치료를 지향합니다.', text: '아름다움의 본질에 집중하여,\n다이어트를 위해서가 아닌 아름다워지기 위해\n내원하는 한의원이 되고자 합니다.' },
@@ -1299,20 +1477,27 @@
                 </div>
                 <div className="mt-10 pt-8 border-t border-black/10">
                   <p className="font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">공덕현</b></p>
-                  <p className="mt-2 text-sm text-mint-700">여드름 흉터 및 피부 질환 전문 · 약 1만회 이상의 실리프팅 시술 경력</p>
-                  <ul className="mt-5 grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-[#555]">
-                    {career.map(c => <li key={c} className="flex gap-2"><span className="text-mint">·</span>{c}</li>)}
-                  </ul>
                 </div>
               </div>
             </section>
 
-            {/* 원본에도 사진·이름만 있어 경력은 임의로 추가하지 않음 — 빈 여백 없이 프로필 카드로 표시 */}
-            <section className="mt-16 md:mt-[100px] flex justify-center">
-              <figure className="w-full max-w-[340px] text-center">
-                <img src={img('profile2.jpg')} alt="진료원장 조주연" className="w-full rounded-sm" />
-                <figcaption className="mt-5 font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">조주연</b></figcaption>
-              </figure>
+            {/* 조주연 원장 — 공덕현 원장과 같은 구성·톤(1인칭 메시지), 좌우 반전 배치 */}
+            <section className="mt-20 md:mt-[140px] flex flex-col lg:flex-row-reverse gap-10 lg:gap-20 items-start">
+              <div className="w-full lg:w-[460px] shrink-0">
+                <img src={img('profile2.jpg')} alt="진료원장 조주연" className="w-full" loading="lazy" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-serif text-[22px] md:text-[28px] leading-[1.6] text-ink-dark">작은 각도와 높이의 차이가<br />인상을 바꾼다고 믿습니다</h4>
+                <div className="mt-8 space-y-4 text-[15px] md:text-base leading-[1.9] text-ink">
+                  <p>오랜 기간 실리프팅 시술을 해 오면서 느낀 것이 있습니다.<br />라인의 인상은 크게 바꾸는 것보다, 아주 작은 차이를 얼마나 섬세하게 맞추느냐에서 달라진다는 것입니다.</p>
+                  <p>그래서 시술 전에는 얼굴형과 이미지, 원하시는 분위기까지 충분히 이야기를 나누고<br />그분에게 가장 <b className="font-medium text-mint-700">자연스러운 라인</b>을 함께 찾아갑니다.</p>
+                  <p>다이어트도 마찬가지입니다. 체중계의 숫자만이 아니라 컨디션과 생활 습관, 감량 이후의 탄력까지 한 분 한 분 <b className="font-medium text-mint-700">꼼꼼하게 챙기는 관리</b>를 하겠습니다.</p>
+                  <p className="font-medium">믿고 맡겨 주신 라인을 끝까지 세심하게 살피겠습니다.</p>
+                </div>
+                <div className="mt-10 pt-8 border-t border-black/10">
+                  <p className="font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">조주연</b></p>
+                </div>
+              </div>
             </section>
           </Container>
 
@@ -1331,6 +1516,24 @@
               </div>
             </Container>
           </section>
+        </SubLayout>
+      );
+    }
+
+    // 라인앤코 > 공간 둘러보기 — 홈에 있던 GallerySection(내부 사진 갤러리)을 그대로 사용
+    function SpacePage() {
+      return (
+        <SubLayout title="공간 둘러보기" en="OUR SPACE" bg={1} tabs={INTRO_TABS}>
+          <GallerySection compact />
+        </SubLayout>
+      );
+    }
+
+    // 라인앤코 > 오시는 길 — 홈에 있던 LocationSection(지도·주소·진료시간)을 그대로 사용
+    function LocationPage() {
+      return (
+        <SubLayout title="오시는 길" en="LOCATION" bg={1} tabs={INTRO_TABS}>
+          <LocationSection compact />
         </SubLayout>
       );
     }
@@ -1370,6 +1573,150 @@
     // ========================================
     // 📄 Sub Pages — 메이크라인 다이어트
     // ========================================
+    // ----------------------------------------
+    // 메이크라인 환 구성 약재 (다이어트환 전용 사이트 lineco.kr 의 약재 구성·이미지 활용)
+    // ※ 문구는 새로 작성, 효과 보장·'부작용 없음'·수치 표현은 제외 (의료법 제56조)
+    // ----------------------------------------
+    const HERB_IMG = (n) => `https://lineco.kr/img/medicinefood${n}.png`;
+    const DIET_HERB_GROUPS = [
+      {
+        key: 'burn', en: 'FAT BURNING', name: '팻버닝 핵심약재', count: '2종',
+        summary: '지방 대사와 식욕 조절을 돕는 약재',
+        herbs: [
+          { n: 1, name: '복령', tags: ['수분 대사', '탄력 관리'], desc: '수분 대사를 도와 몸을 가볍게 하고, 대사가 떨어진 호르몬형 비만 관리에 쓰입니다. 레시틴·유기산 성분이 탄력 관리에 도움을 줍니다.' },
+          { n: 2, name: '마황', tags: ['식욕 조절', '지방 대사'], desc: '식욕 조절과 지방 대사를 돕는 약재로, 체질과 건강 상태를 진료한 뒤 한의사가 용량을 정해 처방합니다.' },
+        ],
+      },
+      {
+        key: 'edema', en: 'ANTI-SWELLING', name: '부종제거 핵심약재', count: '2종',
+        summary: '정체된 수분과 노폐물 배출을 돕는 약재',
+        herbs: [
+          { n: 3, name: '백출', tags: ['노폐물 배출', '부종 관리'], desc: '체내 노폐물과 수분 정체를 줄여, 다이어트 초기 붓기로 가려져 있던 라인 변화를 돕습니다.' },
+          { n: 4, name: '방기', tags: ['수분 배출', '관절 부담 완화'], desc: '정체된 수분 배출을 도와 손발 부종 관리에 쓰이며, 관절의 불편감 완화에도 활용됩니다.' },
+        ],
+      },
+      {
+        key: 'yoyo', en: 'ANTI-YOYO', name: '요요방지 핵심약재', count: '6종',
+        summary: '감량 이후의 컨디션과 체질 유지를 돕는 약재',
+        herbs: [
+          { n: 5, name: '당귀', tags: ['혈액순환', '생리불순 개선'], desc: '기력 저하·냉증·생리불순을 살펴 호르몬 불균형으로 인한 요요 관리를 돕습니다.' },
+          { n: 6, name: '의이인', tags: ['수분 정체 해소', '소화 기능'], desc: '습과 부종을 줄이고 소화 기능을 도와 수분 정체로 인한 체중 반등을 관리합니다.' },
+          { n: 7, name: '맥문동', tags: ['수분 보충', '진정'], desc: '진액을 보충해 다이어트 중 흔한 건조감과 피로를 관리하고 수분 밸런스를 안정시킵니다.' },
+          { n: 8, name: '구기자', tags: ['간 기능', '항산화'], desc: '간·신을 보하고 항산화 작용으로 감량 후 체력 저하 관리를 돕습니다.' },
+          { n: 9, name: '석창포', tags: ['식욕 조절', '집중력'], desc: '무기력과 집중력 저하를 살펴 감량 후 흔들리기 쉬운 식욕 조절을 돕습니다.' },
+          { n: 10, name: '감초', tags: ['소화기 안정', '약재 조화'], desc: '소화 기능을 돕고 다른 약재를 조화시켜 복약 안정성을 높입니다.' },
+        ],
+      },
+    ];
+
+    // 구성 약재 섹션: 성분 구성 요약(3그룹 + 콜라겐) → 그룹 탭 → 통일된 약재 카드
+    function DietHerbSection() {
+      const [tab, setTab] = useState(DIET_HERB_GROUPS[0].key);
+      const group = DIET_HERB_GROUPS.find(g => g.key === tab);
+      return (
+        <section className="mt-20 md:mt-[150px] py-20 md:py-[120px] bg-cream">
+          <Container>
+            <BlockTitle eyebrow="WHAT'S IN IT" title={'지방은 줄이고, 탄력은 지키는\n메이크라인 환의 약재 구성'}
+              desc="팻버닝·부종제거·요요방지 약재 10종에 초저분자 피쉬 콜라겐을 더해, 체형과 체질에 맞춰 처방합니다." />
+
+            {/* 성분 구성 요약 */}
+            <ul className="mt-12 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              {DIET_HERB_GROUPS.map(g => (
+                <li key={g.key}>
+                  <button type="button" onClick={() => setTab(g.key)} aria-pressed={tab === g.key}
+                    className={`w-full h-full text-left bg-white px-5 py-6 border transition-colors ${tab === g.key ? 'border-ink-dark' : 'border-transparent hover:border-black/20'}`}>
+                    <p className="font-roboto text-[10px] md:text-[11px] tracking-[2px] text-mint-700">{g.en}</p>
+                    <p className="mt-2 font-serif text-lg md:text-xl text-ink-dark">{g.name} <span className="font-prata italic text-mint-700">{g.count}</span></p>
+                    <p className="mt-1 text-[12px] md:text-[13px] leading-[1.6] text-[#666]">{g.summary}</p>
+                  </button>
+                </li>
+              ))}
+              {/* PLUS 카드 → 페이지 하단 콜라겐 설명(CollagenNote)으로 스크롤 + 차트 자동 펼침 */}
+              <li>
+                <button type="button" onClick={() => {
+                    window.dispatchEvent(new Event('open-collagen'));
+                    document.getElementById('collagen-note')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="group w-full h-full text-left bg-white px-5 py-6 border border-transparent hover:border-black/20 transition-colors">
+                  <p className="font-roboto text-[10px] md:text-[11px] tracking-[2px] text-mint-700">PLUS</p>
+                  <p className="mt-2 font-serif text-lg md:text-xl text-ink-dark">초저분자 피쉬 콜라겐</p>
+                  <p className="mt-1 text-[12px] md:text-[13px] leading-[1.6] text-[#666]">다이어트 중 탄력 관리를 위해 환에 함께 배합</p>
+                  <span className="mt-3 inline-block text-[12px] text-ink-dark border-b border-ink-dark/60 group-hover:text-mint-700 group-hover:border-mint-700 transition-colors">자세히 보기 ↓</span>
+                </button>
+              </li>
+            </ul>
+
+            {/* 선택한 그룹의 약재 카드 — 모든 카드 동일한 원형 사진·구성 */}
+            <div className="mt-12 md:mt-16">
+              <div className="flex items-baseline gap-3 border-b border-black/15 pb-4">
+                <h3 className="font-serif text-xl md:text-2xl text-ink-dark">{group.name}</h3>
+                <span className="font-prata italic text-mint-700">{group.count}</span>
+              </div>
+              <ul className={`mt-8 grid gap-x-6 gap-y-10 ${group.herbs.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
+                {group.herbs.map(h => (
+                  <li key={h.name} className="flex gap-5 items-start">
+                    <img src={HERB_IMG(h.n)} alt={h.name} loading="lazy" className="w-24 h-24 md:w-28 md:h-28 shrink-0 rounded-full object-cover bg-white" />
+                    <div>
+                      <h4 className="font-serif text-lg md:text-xl text-ink-dark">{h.name}</h4>
+                      <ul className="mt-2 flex flex-wrap gap-1.5">
+                        {h.tags.map(t => <li key={t} className="tag-line !py-0.5 !px-2 !text-[11px]">{t}</li>)}
+                      </ul>
+                      <p className="mt-3 text-[13px] md:text-sm leading-[1.75] text-[#555]">{h.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <p className="mt-12 text-center text-xs text-[#999]">※ 약재 구성과 용량은 체질·건강 상태에 따라 진료 후 조정됩니다.</p>
+          </Container>
+        </section>
+      );
+    }
+
+    // 이런 분께 권해드립니다 (lineco.kr 추천 대상 재구성)
+    const DIET_RECOMMEND = [
+      { t: '체중계보다 눈바디가 중요한 분', d: '숫자보다 보이는 라인의 변화를 원하는 분께 체형 중심으로 처방합니다.' },
+      { t: '배고픈 다이어트가 힘들었던 분', d: '억지 절식 대신 식욕 조절을 중심으로 관리합니다.' },
+      { t: '운동할 시간이 부족한 분', d: '바쁜 일상 속에서도 무리 없이 이어갈 수 있게 설계합니다.' },
+      { t: '중요한 일정을 앞둔 분', d: '웨딩·바디프로필 촬영, 공연 등 일정에 맞춰 계획합니다.' },
+      { t: '감량 후 탄력 저하가 걱정되는 분', d: '콜라겐을 함께 배합해 처짐과 탄력 관리를 고려합니다.' },
+      { t: '요요를 반복해 온 분', d: '감량 이후의 생활 습관과 체질 유지까지 함께 봅니다.' },
+    ];
+
+    // 비대면 처방 과정 + 복용 안내 (lineco.kr 처방 과정 재구성)
+    const DIET_PROCESS = [
+      ['상담 신청', '홈페이지·카카오톡'],
+      ['설문 작성', '체형·생활 습관 확인'],
+      ['1:1 진료', '원장 상담 후 맞춤 처방'],
+      ['배송', '영업일 기준 2일 이내'],
+      ['사후 관리', '경과에 따라 처방 조정'],
+    ];
+
+    function DietGuideSection() {
+      return (
+        <section className="pt-20 md:pt-[150px]">
+          <Container>
+            <BlockTitle eyebrow="RECOMMEND" title="이런 분께 권해드립니다" />
+            <ul className="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {DIET_RECOMMEND.map((r, i) => (
+                <li key={r.t} className="border border-black/10 px-6 py-7">
+                  <span className="font-prata italic text-mint-700">{String(i + 1).padStart(2, '0')}</span>
+                  <h4 className="mt-2 text-[17px] font-medium text-ink-dark">{r.t}</h4>
+                  <p className="mt-2 text-sm leading-[1.75] text-[#666]">{r.d}</p>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-20 md:mt-[120px]">
+              <BlockTitle eyebrow="PROCESS" title={'멀리 계셔도,\n비대면으로 처방받을 수 있습니다'} desc="전국 어디서나 전화 진료 후 처방받으실 수 있습니다." />
+              <div className="mt-10 md:mt-14"><StepFlow steps={DIET_PROCESS} /></div>
+              <p className="mt-8 text-center text-sm text-[#666]">복용은 보통 <b className="font-medium text-ink-dark">하루 2회, 식사 1시간 전</b>이며, 소화 상태와 생활 패턴에 따라 조정해 드립니다.</p>
+            </div>
+          </Container>
+        </section>
+      );
+    }
+
     function MakelineDietPage() {
       const points = [
         { n: '01', k: '안전성', text: '부작용 없이 건강하게\n체중을 감량하고\n싶으신가요?' },
@@ -1381,9 +1728,9 @@
         { no: 'Makeline 02', name: '메이크라인 환 부스트', en: 'Boost', checks: ['지방분해 성분 강화', '강력하고 빠른 다이어트'] },
       ];
       const prices = [
-        { name: 'MAKE LINE 메이크라인환', desc: '슬래머 / 슬리머 / 슬랜더', rows: [['1 개월', 226000, 300000], ['3 개월', 489000, 900000]] },
-        { name: '디톡스 환', desc: '디톡스로 몸을 가볍게 하고 다이어트 시 발생할 수 있는 변비 문제를 해결', rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
-        { name: '아쿠아 밸런스', desc: '평소에 얼굴, 다리 등 몸이 자주 붓거나 성형 등 시술 후 생길 수 있는 멍과 붓기를 제거', rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
+        { name: 'MAKE LINE 메이크라인환', desc: '슬래머 / 슬리머 / 슬랜더 × 오리지널 · 부스트, 6종 중 맞춤 처방', points: ['초저분자 피쉬 콜라겐 함유', '작은 농축환 형태로 간편한 복용'], rows: [['1 개월', 226000, 300000], ['3 개월', 489000, 900000]] },
+        { name: '디톡스 환', desc: '다이어트 중 생기기 쉬운 변비와 정체된 장 운동을 관리하는 처방', points: ['일시적 배변 유도가 아닌 건강한 배변 리듬', '장 운동 개선으로 노폐물 배출', '마인·대황 복합 처방'], rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
+        { name: '아쿠아 밸런스', desc: '수분 정체로 인한 붓기와 어혈을 관리해 몸과 다리를 가볍게 하는 처방', points: ['하체 중심 붓기 관리', '시술 후 멍·붓기, 생리통 등 어혈 관리', '웨딩·바디프로필 전 단기 집중 복용'], rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
       ];
       const faqs = [
         { q: '메이크라인환 몇 세부터 복용 가능한가요?', a: '환자의 나이와 체중, 시기에 따른 BMI 백분율을 고려하여 약재를 감량하거나 조절하여 처방하기 때문에 나이의 제한은 없습니다.' },
@@ -1393,6 +1740,9 @@
       const won = (n) => n.toLocaleString('ko-KR');
       return (
         <SubLayout title="메이크라인 다이어트" en="MAKELINE DIET" bg={4}>
+          {/* 홈에 있던 철학 섹션(원장 사진 + LINE&CO + 다이어트 철학)을 이 페이지 맨 위로 이동 */}
+          <PhilosophySection />
+
           <section className="pt-16 md:pt-[100px]">
             <Container>
               <SectionTitle title={<>몇 번을 시도해도 실패했나요?<br />이번엔 성공할 차례입니다.</>} />
@@ -1416,28 +1766,8 @@
             </Container>
           </section>
 
-          <section className="mt-20 md:mt-[150px] bg-cream py-20 md:py-[120px]">
-            <Container>
-              <SubTitle title="초저분자 펩타이드 피쉬 콜라겐">체중 감량 후에도 탄력 있는 몸매와 피부를 유지할 수 있으며 주름 개선뿐 아니라 신체의 탄력 증진 및 S라인 유지에 기여합니다.</SubTitle>
-              <div className="mt-10 md:mt-14 grid md:grid-cols-2 gap-6">
-                {[1, 2].map(n => (
-                  <picture key={n} className="block bg-white p-4">
-                    <source media="(min-width: 768px)" srcSet={img(`home_chart_${n}.svg`)} />
-                    <img src={img(`home_chart_m_${n}.svg`)} alt="피쉬 콜라겐 비교 차트" className="w-full" loading="lazy" />
-                  </picture>
-                ))}
-              </div>
-            </Container>
-          </section>
-
-          {/* 원본 makeline_diet: 인포그래픽 6장을 전체 폭으로 쌓고 배경을 흰색/#F9F9F9 번갈아 배치 */}
-          {[1, 2, 3, 4, 5, 6].map(n => (
-            <section key={n} className={`py-12 md:py-20 ${n === 2 || n === 5 ? 'bg-[#F9F9F9]' : 'bg-white'}`}>
-              <Container>
-                <img src={img(`content_010${n}.svg`)} alt="" loading="lazy" className="block w-full max-w-[1180px] mx-auto" />
-              </Container>
-            </section>
-          ))}
+          {/* 구성 약재 — 원본 인포그래픽(PC·모바일 중복 6장)을 통일된 카드 섹션 하나로 재구성 */}
+          <DietHerbSection />
 
           <section className="pt-20 md:pt-[150px]">
             <Container>
@@ -1493,6 +1823,11 @@
                   <div key={p.name} className="border border-black/10 p-7 flex flex-col">
                     <h4 className="font-serif text-xl text-ink-dark">{p.name}</h4>
                     <p className="mt-2 text-sm leading-6 text-[#666] min-h-[48px]">{p.desc}</p>
+                    {p.points && (
+                      <ul className="mt-3 space-y-1 text-[13px] leading-6 text-[#555]">
+                        {p.points.map(pt => <li key={pt} className="flex gap-2"><span className="text-mint-700" aria-hidden="true">·</span>{pt}</li>)}
+                      </ul>
+                    )}
                     <ul className="mt-5 pt-5 border-t border-black/10 space-y-3">
                       {p.rows.map(([label, price, origin]) => (
                         <li key={label} className="flex items-baseline justify-between gap-3">
@@ -1523,7 +1858,8 @@
                 </div>
               </div>
               <div className="md:w-1/2">
-                <img src={img('makeline_food.png')} alt="" loading="lazy" className="w-full h-full object-cover" />
+                {/* 건강식 이미지: Unsplash License (photo-1547592180-85f173990554) — 기존 도넛 사진 대체 */}
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&q=80&auto=format&fit=crop" alt="균형 잡힌 건강식 한 접시" loading="lazy" className="w-full h-full object-cover" />
               </div>
             </div>
           </section>
@@ -1540,9 +1876,15 @@
             </Container>
           </section>
 
+          {/* 추천 대상 + 비대면 처방 과정 (lineco.kr 내용 재구성) */}
+          <DietGuideSection />
+
+          {/* 피쉬 콜라겐 — 홈에 있던 요약 띠와 합쳐 한 곳(FAQ 위)에서만 안내, 차트는 '자세히 보기'로 펼침 */}
+          <div className="mt-20 md:mt-[120px]"><CollagenNote /></div>
+
           <section className="pt-20 md:pt-[150px]">
             <Container className="max-w-[980px]">
-              <SectionTitle title={<><span className="font-prata">FAQ</span><br />라인앤코 원장이 직접 답변드립니다.</>} />
+              <SectionTitle title={<span className="font-prata">FAQ</span>} />
               <FaqList items={faqs} />
             </Container>
           </section>
@@ -1646,15 +1988,15 @@
 
     const INJECTIONS = {
       shading: {
-        eyebrow: 'SHADING INJECTION', name: '쉐딩주사',
-        headline: '메이크업의 쉐딩처럼,\n바디에 음영과 라인을 더하다',
-        desc: '지방이 모여 둔해 보이는 부위에 지방컷 약침과 라인업 약침을 층별로 설계해 주입합니다. 부피는 덜어내고 피부 표면은 탄력 있게 정돈하는 라인앤코의 바디 라인 약침 프로그램입니다.',
-        image: 'procedure_contour_2.png',
-        tags: ['팔뚝', '옆구리', '브라라인', '복부', '허벅지', '이중턱'],
+        eyebrow: 'SHADING PACKAGE', name: '쉐딩 패키지',
+        headline: '탄력은 채우고,\n군살은 덜어내는 바디 라인 케어',
+        desc: '극초단파 기기 리바이브로 피부 깊은 층의 탄력을 관리하고, 쉐딩주사로 지방과 붓기가 고인 부위를 정리하는 패키지입니다. 팔뚝과 복부를 중심으로 턱선·허벅지까지 부위에 맞춰 설계합니다.',
+        image: 'pro_part_6.png',
+        tags: ['팔뚝', '복부', '옆구리', '허벅지', '턱선'],
         points: [
-          { title: '두 가지 약침의 레이어링', text: '지방층에는 지방컷 약침, 피내층에는 라인업 약침. 깊이를 나눠 역할을 다르게 설계합니다.' },
-          { title: '부위별 라인 디자인', text: '같은 팔뚝이라도 지방이 모인 위치는 사람마다 다릅니다. 진료 후 마킹으로 주입 범위를 정합니다.' },
-          { title: '바디 기기와 조합', text: '리바이브·미쿨S 등 바디 기기를 함께 조합해 체형과 일정에 맞춘 플랜을 제안합니다.' },
+          { title: '리바이브 — 탄력 케어', text: '극초단파(마이크로웨이브) 에너지를 피부 깊은 층까지 전달해 탄력을 관리합니다. 쿨링 시스템으로 시술 중 열감을 줄였습니다.' },
+          { title: '쉐딩주사 — 지방·붓기 관리', text: '지방과 붓기가 함께 고인 부위를 진료 후 디자인해 주입합니다. 한약재 기반 약침을 사용합니다.' },
+          { title: '라인 전체의 균형', text: '한 부위만이 아니라 팔뚝·복부·턱선처럼 함께 신경 쓰이는 부위를 묶어 전체 균형을 봅니다.' },
         ],
         recommend: [
           '운동과 식단을 해도 특정 부위만 잘 줄지 않는 분',
@@ -1662,23 +2004,23 @@
           '드레스·수영복 등 노출 전에 라인을 정돈하고 싶은 분',
           '다이어트 후 남은 군살이 신경 쓰이는 분',
         ],
-        steps: [['1:1 진료', '체형 분석 · 부위 측정'], ['라인 디자인', '주입 범위 마킹'], ['약침 시술', '지방컷 · 라인업 레이어링'], ['사후 관리', '기기 병행 · 경과 확인']],
+        steps: [['1:1 진료', '체형 · 부위 확인'], ['리바이브', '극초단파 탄력 케어'], ['쉐딩주사', '지방 · 붓기 부위 주입'], ['경과 확인', '다음 회차 플랜 조정']],
         gallery: [
-          { img: 'pro_fat_4.png', name: '지방컷 약침', text: '지방층에 주입해\n부피감을 덜어내는 약침' },
-          { img: 'pro_chin_list_02.png', name: '라인업 약침', text: '피내층에 주입해\n표면 탄력과 라인을 정돈' },
-          { img: 'pro_fat_1.png', name: '리바이브 병행', text: '마이크로웨이브 기기로\n넓은 부위를 함께 관리' },
+          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n깊은 층 탄력 케어' },
+          { img: 'pro_fat_4.png', name: '쉐딩주사', text: '지방·붓기가 고인 부위를\n디자인해 주입' },
+          { img: 'procedure_contour_region_3.png', name: '팔뚝 · 복부 라인', text: '드레스·민소매 핏을\n좌우하는 부위부터' },
         ],
       },
       yeori: {
-        eyebrow: 'YEORI INJECTION', name: '여리주사',
-        headline: '단단하게 솟은 라인을,\n여리여리하게',
-        desc: '승모근·종아리·팔뚝처럼 뭉치고 도드라져 보이는 라인을 위한 프로그램입니다. 근육의 과한 긴장을 풀어주는 약침과 체형 교정, 라인업 약침을 함께 설계해 부드럽고 가녀린 실루엣을 목표로 관리합니다.',
+        eyebrow: 'YEORI PACKAGE', name: '여리 패키지',
+        headline: '뭉친 근육은 풀고,\n솟은 라인은 여리하게',
+        desc: '승모근·종아리처럼 뭉치고 도드라져 보이는 부위는 근육 크기만의 문제가 아닌 경우가 많습니다. 승모근은 여리침 → 리바이브 → 여리주사 → 체형교정의 단계로, 종아리는 여리주사와 리바이브로 진행합니다.',
         image: 'pro_part_3.png',
-        tags: ['승모근', '종아리', '팔뚝 윗라인'],
+        tags: ['승모근', '종아리', '목·어깨 라인'],
         points: [
-          { title: '긴장 완화 약침', text: '뭉치고 굳은 근육 주변에 약침을 놓아 라인을 도드라지게 만드는 과한 긴장을 풀어줍니다.' },
-          { title: '체형 교정 병행', text: '일자목·라운드숄더·짝다리처럼 라인을 솟아 보이게 하는 자세를 추나로 함께 살핍니다.' },
-          { title: '라인업 약침으로 마무리', text: '피부 탄력과 표면 라인까지 정돈해 한결 여리한 인상을 더합니다.' },
+          { title: '여리침 — 긴장 완화', text: '과하게 긴장된 근육과 근막을 확인해 침 치료로 긴장도를 먼저 낮춥니다.' },
+          { title: '리바이브 — 라인 정돈', text: '목에서 어깨로 이어지는 두툼한 경계 부위를 극초단파 기기로 매끄럽게 관리합니다.' },
+          { title: '여리주사 · 체형교정', text: '근육 이완 약침으로 섬세하게 마무리하고, 라운드숄더·거북목처럼 라인을 무너뜨리는 자세를 함께 교정합니다.' },
         ],
         recommend: [
           '어깨가 솟아 목이 짧아 보이는 분',
@@ -1686,7 +2028,7 @@
           '민소매를 입을 때 팔 윗부분 라인이 고민인 분',
           '라인과 함께 뭉침·뻐근함도 관리하고 싶은 분',
         ],
-        steps: [['1:1 진료', '근육 · 자세 체크'], ['부위 설계', '긴장 부위 확인'], ['약침 · 추나', '긴장 완화 · 체형 교정'], ['라인 정돈', '라인업 약침 · 경과 확인']],
+        steps: [['여리침', '근육 긴장도 완화'], ['리바이브', '목·어깨 라인 정돈'], ['여리주사', '근육 이완 약침'], ['체형교정', '자세 · 정렬 관리']],
         gallery: [
           { img: 'pro_part_3.png', name: '승모근 라인', text: '솟은 어깨를 내려\n목선을 길게' },
           { img: 'program_chuna.png', name: '추나 체형교정', text: '라인을 무너뜨리는\n자세부터 함께' },
@@ -1731,12 +2073,12 @@
       calf: {
         eyebrow: 'CALF LINE', name: '종아리 슬림', image: UNSPLASH.calf,
         headline: '하이힐 위로 곧게,\n매끈한 종아리 라인',
-        desc: '종아리는 근육, 부종, 지방이 함께 영향을 줍니다. 오래 서 있는지, 저녁에 붓는지까지 확인해 관리 방법을 정합니다.',
+        desc: '종아리는 근육, 부종, 지방이 함께 영향을 줍니다. 라인앤코는 여리주사와 리바이브를 기본으로, 오래 서 있는지·저녁에 붓는지까지 확인해 조합을 정합니다.',
         worries: ['종아리 알이 도드라져 치마 입기가 망설여져요', '저녁이면 다리가 붓고 무거워요', '발목 라인이 두꺼워 보여요', '운동을 하면 오히려 종아리가 단단해져요'],
         types: [
-          { name: '근육형', desc: '종아리 알이 단단하게 발달한 타입', plan: ['여리주사', '긴장 완화 약침'] },
-          { name: '부종형', desc: '저녁마다 붓고 무거운 타입', plan: ['아쿠아밸런스환', '붓기침'] },
-          { name: '지방형', desc: '손으로 잡히는 군살이 있는 타입', plan: ['쉐딩주사', '미쿨S'] },
+          { name: '근육형', desc: '종아리 알이 단단하게 발달한 타입', plan: ['여리주사', '리바이브'] },
+          { name: '부종형', desc: '저녁마다 붓고 무거운 타입', plan: ['리바이브', '아쿠아밸런스환', '붓기침'] },
+          { name: '지방형', desc: '손으로 잡히는 군살이 있는 타입', plan: ['여리주사', '리바이브', '미쿨S'] },
         ],
         gallery: [
           { img: 'pro_fat_list_04.png', name: '아쿠아밸런스환', text: '잘 붓는 체질을 위한\n순환 처방' },
@@ -1828,7 +2170,8 @@
 
     function StepFlow({ steps }) {
       return (
-        <ol className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        // 단계 수에 맞춰 PC에서 한 줄로 배치 (4단계 → 4열, 5단계 → 5열)
+        <ol className={`grid grid-cols-2 gap-4 md:gap-6 ${steps.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           {steps.map(([title, text], i) => (
             <li key={title} className="relative text-center border border-black/10 rounded-none px-4 py-8 bg-white">
               <span className="font-prata text-3xl text-mint">{String(i + 1).padStart(2, '0')}</span>
@@ -2203,6 +2546,8 @@
             <Route path="/" element={<HomePage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
             <Route path="/setsus_apart" element={<SetsusApartPage />} />
+            <Route path="/space" element={<SpacePage />} />
+            <Route path="/location" element={<LocationPage />} />
             <Route path="/makeline_diet" element={<MakelineDietPage />} />
             <Route path="/procedure/facial" element={<ProcedureFacialPage />} />
             <Route path="/procedure/:kind" element={<ProcedurePage />} />
