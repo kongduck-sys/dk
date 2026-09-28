@@ -126,24 +126,35 @@
       { label: '윤곽/실리프팅', href: '/procedure/contour' },
       { label: '안면비대칭/피부관리', href: '/procedure/facial' },
     ];
-    // 프로그램: 바디 시술 중심 재구성 (쉐딩·여리주사 + 부위별 슬림 + 예비신부)
-    // 기존 상세(가슴·힙·지흡·지방파괴·이중턱·페이스)는 '전체 프로그램' 하단에서 연결
+    // GNB 재구성: 라인앤코 · 메이크라인 다이어트 · 프로그램 · 바디컨투어링 · 페이스&스킨 · 이벤트
+    // (기존 '시술소개' 페이지는 GNB에서 빠졌지만 주소로는 계속 접근 가능)
     const PROGRAM_TABS = [
-      { label: '전체 프로그램', href: '/program' },
       { label: '쉐딩 패키지', href: '/program/shading' },
       { label: '여리 패키지', href: '/program/yeori' },
+      { label: '바로 패키지', href: '/program/face-balance' },
+      { label: '예비신부 패키지', href: '/program/bride' },
+    ];
+    const BODY_TABS = [
+      { label: '승모 슬림', href: '/program/shoulder' },
       { label: '팔뚝 슬림', href: '/program/arm' },
-      { label: '승모근 슬림', href: '/program/shoulder' },
+      { label: '복부 슬림', href: '/program/belly' },
+      { label: '허벅지 슬림', href: '/program/thigh' },
       { label: '종아리 슬림', href: '/program/calf' },
-      { label: '안면비대칭', href: '/program/face-balance' },
-      { label: '예비신부 프로그램', href: '/program/bride' },
+    ];
+    const FACE_TABS = [
+      { label: '코프팅', href: '/face/nose' },
+      { label: '브이라인 리프팅', href: '/face/vline' },
+      { label: '안면비대칭', href: '/face/asymmetry' },
+      { label: '볼류머샷', href: '/face/volumer' },
+      { label: '미백주사', href: '/face/whitening' },
     ];
 
     const NAV = [
       { label: '라인앤코', href: '/introduction', sub: INTRO_TABS },
       { label: '메이크라인 다이어트', href: '/makeline_diet', sub: [] },
-      { label: '시술소개', href: '/procedure/elasticity', sub: PROCEDURE_TABS },
-      { label: '프로그램', href: '/program', sub: PROGRAM_TABS },
+      { label: '프로그램', href: '/program/shading', sub: PROGRAM_TABS },
+      { label: '바디컨투어링', href: '/program/shoulder', sub: BODY_TABS },
+      { label: '페이스&스킨', href: '/face/nose', sub: FACE_TABS },
       { label: '이벤트', href: '/event', sub: [] },
     ];
 
@@ -437,7 +448,7 @@
                   <div className="gnb-bg absolute left-1/2 -translate-x-1/2 top-[90px] w-screen h-0 bg-white transition-all duration-300 shadow-[0_4px_5px_rgba(0,0,0,0.12)]" />
                   <ul className="relative flex items-center h-full">
                     {NAV.map(item => (
-                      <li key={item.label} className="gnb-item relative flex items-center h-full ml-[40px] wide:ml-[85px] first:ml-0">
+                      <li key={item.label} className="gnb-item relative flex items-center h-full ml-[64px] wide:ml-[85px] first:ml-0">
                         <a href={`#${item.href}`} className="relative inline-block whitespace-nowrap text-[14px] font-normal tracking-[0.02em] text-ink-dark">{item.label}</a>
                         <div className="gnb-sub absolute top-[90px] left-0 min-w-[145px] h-0 overflow-hidden transition-all duration-300">
                           {item.sub.length > 0 && (
@@ -756,13 +767,13 @@
     ];
 
     const HOME_FACE_SKIN = [
-      // 코프팅 이미지: Unsplash License (photo-1626362337699-9b020ec8e716, 옆모습 콧대 라인)
-      { to: '/procedure/contour', img: 'https://images.unsplash.com/photo-1626362337699-9b020ec8e716?w=900&q=80&auto=format&fit=crop', en: 'NOSE THREAD LIFT', name: '코프팅', desc: '녹는 PDO 실로 콧대와 코끝의 높이·각도를 디자인하는 코 실리프팅' },
-      { to: '/procedure/contour', img: 'procedure_contour_region_5.png', en: 'FACE THREAD LIFT', name: '동안 실리프팅', desc: '이중턱 · 팔자 · V라인까지, 얼굴 처짐을 고려한 실리프팅' },
-      { to: '/procedure/facial', img: 'pro_face_PLLA.png', en: 'SKIN BOOSTER', name: '스킨부스터', desc: '꺼진 부위를 채우는 볼류머샷, 맑은 톤을 위한 미백주사' },
+      // 코프팅 이미지: 병원 자체 이미지(원본 사이트 procedure_contour_region_4 — 동양인 옆모습 + 콧대 화살표)
+      { to: '/face/nose', img: 'procedure_contour_region_4.png', pos: 'center 40%', en: 'NOSE THREAD LIFT', name: '코프팅', desc: '녹는 PDO 실로 콧대와 코끝의 높이·각도를 디자인하는 코 실리프팅' },
+      { to: '/face/vline', img: 'procedure_contour_region_5.png', en: 'V-LINE LIFTING', name: '브이라인 리프팅', desc: '이중턱 · 팔자 · V라인까지, 얼굴 처짐을 고려한 실리프팅' },
+      { to: '/face/volumer', img: 'pro_face_PLLA.png', en: 'SKIN BOOSTER', name: '볼류머샷 · 미백주사', desc: '꺼진 부위를 채우는 볼류머샷, 맑은 톤을 위한 미백주사' },
       // 안면비대칭 이미지: Unsplash License (unsplash.com/photos/Zscl2b_wrCU, Dmitriy Ilkevich) — 원장님 선택
       // 세로 원본이라 얼굴~턱 선 손까지 보이도록 위쪽(22%) 기준으로 표시
-      { to: '/program/face-balance', img: 'https://images.unsplash.com/photo-1699206791200-414d95e68450?w=900&q=80&auto=format', pos: 'center 22%', en: 'FACE BALANCE', name: '안면비대칭', desc: '얼굴과 몸의 밸런스를 함께 보는 얼굴 비대칭 바로 프로그램' },
+      { to: '/face/asymmetry', img: 'https://images.unsplash.com/photo-1699206791200-414d95e68450?w=900&q=80&auto=format', pos: 'center 22%', en: 'FACE BALANCE', name: '안면비대칭', desc: '얼굴과 몸의 밸런스를 함께 보는 얼굴 비대칭 바로 프로그램' },
     ];
 
     function HomeHeading({ en, title, desc }) {
@@ -852,17 +863,17 @@
 
     // ② 부위별로 찾기
     function AreaStripSection() {
-      const areas = [['arm', '/program/arm'], ['shoulder', '/program/shoulder'], ['calf', '/program/calf']];
+      const areas = [['arm', '/program/arm'], ['shoulder', '/program/shoulder'], ['calf', '/program/calf'], ['thigh', '/program/thigh']];
       return (
         <section className="bg-cream py-24 md:py-[120px]">
           <Container>
             <HomeHeading en="SLIM BY AREA" title="고민 부위로 찾기" />
-            <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
+            <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
               {areas.map(([k, to]) => {
                 const a = AREAS[k];
                 return (
                   <Link key={k} to={to} className="group relative block aspect-[4/5] overflow-hidden bg-stone">
-                    <img src={img(a.image)} alt={a.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img src={img(a.image)} alt={a.name} loading="lazy" style={a.pos ? { objectPosition: a.pos } : undefined} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                     <div className="absolute left-0 right-0 bottom-0 p-6 md:p-7 text-white">
                       <p className="font-roboto text-[11px] tracking-[2.5px] text-white/80">{a.eyebrow}</p>
@@ -999,7 +1010,8 @@
       return (
         <section className="relative flex flex-col md:flex-row bg-cream">
           <div className="md:w-1/2 aspect-[4/3] md:aspect-auto md:min-h-[600px]">
-            <img src={`${IMG}/home_adjust_bg.png`} alt="" className="w-full h-full object-cover" loading="lazy" />
+            {/* 병원 자체 사진(home_adjust_bg)에서 손목시계를 지운 수정본 — 프로젝트 images/ 폴더에 보관 */}
+            <img src="images/philosophy_herbs.jpg" alt="탕전실에서 한약재를 살피는 원장" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="md:w-1/2 flex items-center px-8 py-16 md:px-[100px]">
             <div>
@@ -2024,9 +2036,9 @@
         ],
         steps: [['여리침', '근육 긴장도 완화'], ['리바이브', '목·어깨 라인 정돈'], ['여리주사', '근육 이완 약침'], ['체형교정', '자세 · 정렬 관리']],
         gallery: [
-          { img: 'pro_part_3.png', name: '승모근 라인', text: '솟은 어깨를 내려\n목선을 길게' },
-          { img: 'program_chuna.png', name: '추나 체형교정', text: '라인을 무너뜨리는\n자세부터 함께' },
-          { img: 'pro_part_6.png', name: '팔뚝 윗라인', text: '단단한 팔 윗부분을\n부드럽게' },
+          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n목·어깨 라인을 매끄럽게' },
+          { img: 'pro_part_3.png', name: '여리주사', text: '근육 이완 약침으로\n솟은 라인을 여리하게' },
+          { img: 'program_chuna.png', name: '체형교정', text: '라인을 무너뜨리는\n자세부터 함께' },
         ],
       },
     };
@@ -2080,6 +2092,40 @@
           { img: 'pro_fat_2.png', name: '미쿨S', text: '냉각 에너지로\n지방층 관리' },
         ],
       },
+      belly: {
+        // 이미지: 병원 원본 사이트 복부 사진(pro_part_4 — 아랫배 관리 이미지)
+        eyebrow: 'BELLY LINE', name: '복부 슬림', image: 'pro_part_4.png',
+        headline: '앉아도 편안한,\n납작하고 탄탄한 복부',
+        desc: '복부는 지방, 늘어진 피부, 코어 근력, 붓기가 함께 영향을 줍니다. 쉐딩주사와 리바이브를 기본으로, 원인에 맞춰 바디 기기를 조합합니다.',
+        worries: ['아랫배만 볼록하게 나와 보여요', '앉으면 옆구리와 뱃살이 접혀요', '출산·감량 후 뱃살이 늘어졌어요', '식후에 배가 쉽게 부풀어요'],
+        types: [
+          { name: '지방형', desc: '손으로 잡히는 뱃살이 두꺼운 타입', plan: ['쉐딩주사', '리바이브', '미쿨S'] },
+          { name: '탄력 저하형', desc: '출산·감량 후 피부가 늘어진 타입', plan: ['울핏', '리바이브'] },
+          { name: '코어 약화형', desc: '복부 근력이 약해 배가 앞으로 나온 타입', plan: ['코어스컬프', '체형교정'] },
+        ],
+        gallery: [
+          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n넓은 부위 탄력 관리' },
+          { img: 'pro_hip_list_03.png', name: '코어스컬프', text: '자기장으로\n복부 코어 근육 자극' },
+          { img: 'pro_fat_2.png', name: '미쿨S', text: '냉각 에너지로\n지방층 관리' },
+        ],
+      },
+      thigh: {
+        // 이미지: 병원 원본 사이트 바디 라인 사진 — 카드에서는 허벅지 부분(하단)이 보이도록 pos 지정
+        eyebrow: 'THIGH LINE', name: '허벅지 슬림', image: 'procedure_contour_region_3.png', pos: 'center 78%',
+        headline: '맞닿는 안쪽 라인까지,\n가볍고 매끈한 허벅지',
+        desc: '허벅지는 지방, 셀룰라이트, 부종, 탄력 저하가 함께 나타나기 쉬운 부위입니다. 쉐딩주사와 리바이브를 기본으로, 원인에 맞춰 바디 기기와 실리프팅을 조합합니다.',
+        worries: ['허벅지 안쪽이 맞닿아 쓸려요', '바지를 입으면 허벅지만 끼어요', '울퉁불퉁한 셀룰라이트가 신경 쓰여요', '살은 빠졌는데 허벅지 탄력이 떨어졌어요'],
+        types: [
+          { name: '지방형', desc: '안쪽·바깥쪽에 군살이 잡히는 타입', plan: ['쉐딩주사', '리바이브', '미쿨S'] },
+          { name: '셀룰라이트·부종형', desc: '표면이 울퉁불퉁하고 잘 붓는 타입', plan: ['트리플바디', '아쿠아밸런스환'] },
+          { name: '탄력 저하형', desc: '감량 후 피부가 늘어진 타입', plan: ['울핏', '허벅지 타이트닝 매선'] },
+        ],
+        gallery: [
+          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n넓은 부위 탄력 관리' },
+          { img: 'procedure_line_2.png', name: '트리플바디', text: '지방과 셀룰라이트를\n함께 관리하는 복합 기기' },
+          { img: 'procedure_contour_region_3.png', name: '타이트닝 매선', text: '늘어진 허벅지 피부를\n실로 탄력 있게' },
+        ],
+      },
     };
 
     const BRIDE = {
@@ -2087,18 +2133,26 @@
         { area: '어깨 · 쇄골', plan: '여리주사', img: 'pro_part_3.png', note: '오프숄더·튜브톱 드레스' },
         { area: '팔뚝', plan: '쉐딩주사 · 울핏', img: 'pro_part_6.png', note: '민소매·슬리브리스' },
         { area: '등 · 브라라인', plan: '쉐딩주사 · 미쿨S', img: 'pro_part_5.png', note: '백리스·깊은 뒷라인' },
-        { area: '얼굴 윤곽 · 피부', plan: '리바이브 · 스킨부스터', img: 'pro_face.png', note: '웨딩 촬영 · 본식 메이크업' },
+        { area: '얼굴 윤곽 · 피부', plan: '브이라인 리프팅 · 코프팅 · 미백주사', img: 'pro_face.png', note: '웨딩 촬영 · 본식 메이크업' },
       ],
+      // 얼굴 시술 일정: 볼륨은 서서히 차오르므로 일찍, 실리프팅은 붓기(1~2주) 고려해 D-4주 전까지, 톤 관리는 막바지
       timeline: [
         { d: 'D-12주', title: '진료 · 플랜 설계', text: '체형·피부를 분석하고 촬영·본식 일정에서 거꾸로 계산해 관리 순서를 정합니다.' },
-        { d: 'D-10 ~ 6주', title: '바디 라인 집중', text: '쉐딩주사·여리주사와 바디 기기로 드레스 라인이 드러나는 부위를 먼저 관리합니다.' },
-        { d: 'D-6 ~ 3주', title: '윤곽 · 탄력', text: '리바이브·울핏으로 얼굴 윤곽과 팔 라인의 탄력을 챙기고 메이크라인환으로 컨디션을 맞춥니다.' },
-        { d: 'D-2주 ~ D-day', title: '피부 컨디션', text: '스킨부스터와 붓기 관리로 촬영과 본식 당일의 피부 결과 컨디션을 정돈합니다.' },
+        { d: 'D-10 ~ 6주', title: '바디 라인 · 볼륨 채우기', text: '쉐딩주사·여리주사와 리바이브로 팔뚝·어깨·등 라인을 먼저 관리하고, 볼류머샷으로 꺼진 부위를 미리 채워 둡니다. 볼륨은 수 주에 걸쳐 서서히 차오릅니다.' },
+        { d: 'D-6 ~ 4주', title: '얼굴 라인 디자인', text: '브이라인 리프팅과 코프팅으로 턱선과 코 라인을 정돈합니다. 실리프팅 후 1~2주 붓기를 고려해 늦어도 본식 4주 전까지 진행합니다.' },
+        { d: 'D-3 ~ 2주', title: '탄력 · 컨디션', text: '울핏·리바이브로 팔 라인과 얼굴 탄력을 마무리하고, 메이크라인환으로 컨디션을 맞춥니다.' },
+        { d: 'D-2주 ~ D-day', title: '피부 톤 · 붓기', text: '미백주사로 맑은 톤을 정돈하고, 붓기 관리로 촬영과 본식 당일 피부 컨디션을 맞춥니다.' },
       ],
       items: [
-        { img: 'pro_wedding_lsit_01.png', name: '메이크라인환', text: '슬래머 / 슬리머 / 슬렌더\n원하는 라인을 위한 맞춤 처방' },
+        { img: 'pro_fat_4.png', name: '쉐딩주사', text: '팔뚝·등·복부의 군살을\n드레스 라인에 맞게 정리' },
+        { img: 'pro_part_3.png', name: '여리주사', text: '솟은 승모근을 풀어\n오프숄더 라인을 여리하게' },
         { img: 'pro_fat_list_02.png', name: '리바이브', text: '또렷한 얼굴 윤곽과\n슬림한 드레스 라인' },
+        { img: 'procedure_contour_region_5.png', name: '브이라인 리프팅', text: '이중턱은 정리하고\n턱선은 또렷하게' },
+        { img: 'procedure_contour_region_4.png', name: '코프팅', text: '사진 속 옆모습까지\n코 라인을 디자인' },
+        { img: 'pro_face_PLLA.png', name: '볼류머샷', text: '꺼진 앞볼·이마를\n자연스럽게 채움' },
+        { img: 'pro_face_EXOSOME.png', name: '미백주사', text: '본식 전 맑고\n환한 피부 톤으로' },
         { img: 'pro_list_ulfit.png', name: '울핏', text: '팔뚝 라인을 정돈해\n우아한 실루엣을' },
+        { img: 'pro_wedding_lsit_01.png', name: '메이크라인환', text: '슬래머 / 슬리머 / 슬렌더\n원하는 라인을 위한 맞춤 처방' },
       ],
     };
 
@@ -2207,6 +2261,7 @@
         { to: '/program/arm', ...AREAS.arm },
         { to: '/program/shoulder', ...AREAS.shoulder },
         { to: '/program/calf', ...AREAS.calf },
+        { to: '/program/thigh', ...AREAS.thigh },
       ];
       return (
         <SubLayout title="프로그램" en="BODY PROGRAM" tabs={PROGRAM_TABS}>
@@ -2231,12 +2286,12 @@
 
             {/* 부위별 슬림 */}
             <section className="mt-20 md:mt-[120px]">
-              <BlockTitle eyebrow="SLIM BY AREA" title="고민 부위로 찾기" desc="팔뚝 · 승모근 · 종아리, 가장 많이 상담하시는 세 부위입니다." />
-              <div className="mt-10 md:mt-14 grid sm:grid-cols-3 gap-5">
+              <BlockTitle eyebrow="SLIM BY AREA" title="고민 부위로 찾기" desc="팔뚝 · 승모근 · 종아리 · 허벅지, 가장 많이 상담하시는 네 부위입니다." />
+              <div className="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {areas.map(a => (
                   <Link key={a.to} to={a.to} className="group block rounded-none overflow-hidden bg-white border border-black/5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)] transition-shadow">
                     <div className="aspect-[4/5] overflow-hidden bg-cream">
-                      <img src={img(a.image)} alt={a.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img src={img(a.image)} alt={a.name} loading="lazy" style={a.pos ? { objectPosition: a.pos } : undefined} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                     <div className="p-6">
                       <p className="font-roboto text-[11px] tracking-[2.5px] text-mint-700">{a.eyebrow}</p>
@@ -2345,7 +2400,7 @@
     function AreaProgramPage({ area }) {
       const d = AREAS[area];
       return (
-        <SubLayout title="프로그램" en="BODY PROGRAM" tabs={PROGRAM_TABS}>
+        <SubLayout title="바디컨투어링" en="BODY CONTOURING" tabs={BODY_TABS}>
           <Container>
             <ProgramIntro eyebrow={d.eyebrow} name={d.name} headline={d.headline} desc={d.desc} image={d.image} round={false} />
 
@@ -2409,11 +2464,118 @@
       '사진을 찍으면 비대칭이 도드라져 보여요',
     ];
 
+    // ----------------------------------------
+    // 페이스&스킨 — 코프팅 · 브이라인 리프팅 · 안면비대칭 · 볼류머샷 · 미백주사
+    // ※ 코프팅·실리프팅: 병원 블로그 사실 기준 / 볼류머샷·미백주사: 상세 정보 확인 전이라 일반 설명만 기재
+    // ----------------------------------------
+    const FACE_SKIN = {
+      nose: {
+        eyebrow: 'NOSE THREAD LIFT', name: '코프팅', image: 'https://images.unsplash.com/photo-1626362337699-9b020ec8e716?w=900&h=900&q=80&auto=format&fit=crop&crop=faces',
+        headline: '콧대부터 코끝까지,\n실로 디자인하는 코 라인',
+        desc: '녹는 PDO 실을 여러 가닥 층층이 쌓아 콧대 높이와 코끝 각도를 조절하는 코 실리프팅입니다. 얼굴형과 원하는 인상에 맞춰 코 라인을 디자인합니다.',
+        tags: ['콧대', '코끝', '절개 없이'],
+        points: [
+          { title: '디자인 상담', text: '미간 두께, 콧대 높이, 코끝 각도를 얼굴 전체와의 조화를 보며 함께 정합니다.' },
+          { title: 'PDO 실 레이어링', text: '콧대와 코끝에 들어가는 실의 개수와 비율을 조절해 원하는 형태를 만듭니다.' },
+          { title: '짧은 시술 시간', text: '시술은 약 15~20분 내외로 진행되며, 절개 없이 이루어집니다.' },
+        ],
+        recommend: ['코끝이 처지거나 뭉툭해 보이는 분', '콧대가 낮아 옆모습이 밋밋한 분', '필러나 수술은 부담스러운 분', '자연스러운 변화를 원하는 분'],
+        care: '시술 직후 통증·당김이 있을 수 있고 1~2주 정도 붓기가 있을 수 있습니다. 일주일 정도는 시술 부위 자극·마사지·음주를 피해 주세요.',
+      },
+      vline: {
+        eyebrow: 'V-LINE LIFTING', name: '브이라인 리프팅', image: 'procedure_contour_region_5.png',
+        headline: '이중턱은 정리하고,\n턱선은 또렷하게',
+        desc: '녹는 PDO 실로 처진 얼굴 라인을 당겨 올리고, 필요한 경우 지방컷·라인업 약침과 리바이브를 함께 조합해 브이라인을 정돈합니다.',
+        tags: ['턱선', '이중턱', '팔자', '볼 처짐'],
+        points: [
+          { title: '동안 실리프팅', text: '볼 처짐, 팔자, 이중턱, 마리오네트 라인 등 얼굴 전반의 처짐을 고려해 실을 넣습니다.' },
+          { title: '약침 병행', text: '턱 아래 군살은 지방컷 약침, 피부 탄력은 라인업 약침으로 함께 관리합니다.' },
+          { title: '리바이브 마무리', text: '극초단파 기기로 턱선 주변 지방과 피부 탄력을 함께 관리합니다.' },
+        ],
+        recommend: ['턱선이 흐려지고 얼굴이 넓어 보이는 분', '이중턱이 신경 쓰이는 분', '팔자·볼 처짐이 고민인 분', '수술 없이 윤곽을 정돈하고 싶은 분'],
+      },
+      asymmetry: {
+        eyebrow: 'FACE ASYMMETRY', name: '안면비대칭', image: 'https://images.unsplash.com/photo-1699206791200-414d95e68450?w=900&h=900&q=80&auto=format&fit=crop&crop=faces',
+        headline: '좌우 균형이 맞으면,\n인상이 편안해집니다',
+        desc: '얼굴 비대칭은 턱관절, 목·어깨 긴장, 자세 불균형과 함께 나타나는 경우가 많습니다. 한방재활의학과 전문의가 원인을 확인하고 비수술로 관리할 수 있는지 먼저 살핍니다.',
+        tags: ['턱관절', '턱선·광대 높이', '자세 밸런스'],
+        points: [
+          { title: '원인 확인', text: '얼굴만이 아니라 목·어깨·척추 정렬까지 함께 확인합니다.' },
+          { title: '교정 + 침 치료', text: '턱관절 교정과 침 치료로 근육의 긴장과 밸런스를 관리합니다.' },
+          { title: '바로 패키지 연계', text: '밸런스 교정 → 턱관절 교정 → 바로침 → 바로주사의 단계로 진행할 수 있습니다.' },
+        ],
+        recommend: ['사진을 찍으면 비대칭이 도드라져 보이는 분', '입꼬리·턱선 높이가 다른 분', '턱관절 소리·뻐근함이 있는 분', '양악수술은 부담스러운 분'],
+        link: { to: '/program/face-balance', label: '바로 패키지 자세히 보기' },
+      },
+      volumer: {
+        eyebrow: 'VOLUME SHOT', name: '볼류머샷', image: 'pro_face_PLLA.png',
+        // 라인앤코 자체 브랜드 — 콜라겐 생성 유도형 볼륨 시술(제품명·성분 비공개)
+        headline: '내 피부 속 콜라겐으로,\n꺼진 곳을 자연스럽게 채우다',
+        desc: '팔자주름, 옆볼, 이마처럼 꺼져 보이는 부위에 주입해 피부 스스로 콜라겐을 만들도록 돕는 라인앤코의 볼륨 시술입니다. 한 번에 부풀리기보다 시간을 두고 차오르는 자연스러운 볼륨을 목표로 합니다.',
+        tags: ['팔자주름', '옆볼', '이마', '관자놀이'],
+        points: [
+          { title: '콜라겐 생성 유도', text: '주입된 성분이 피부 속 콜라겐 생성을 도와, 수 주에 걸쳐 볼륨과 탄력이 서서히 차오릅니다.' },
+          { title: '꺼진 부위 디자인', text: '팔자주름·옆볼·이마·관자놀이 등 꺼진 부위를 얼굴 전체 균형에 맞춰 설계합니다.' },
+          { title: '자연스러운 유지', text: '내 피부 조직이 채워지는 방식이라 과하지 않은 자연스러운 인상을 목표로 하며, 상태에 따라 회차를 나눠 진행합니다.' },
+        ],
+        recommend: ['팔자주름·옆볼 꺼짐으로 피곤해 보이는 분', '다이어트 후 얼굴 볼륨이 빠진 분', '이마·관자놀이가 꺼져 인상이 날카로운 분', '필러처럼 티 나는 볼륨은 부담스러운 분'],
+        care: '볼륨은 수 주에 걸쳐 서서히 차오르며, 개인에 따라 여러 회차가 필요할 수 있습니다. 시술 부위에 일시적인 붓기·멍·뭉침감이 있을 수 있습니다.',
+      },
+      whitening: {
+        eyebrow: 'BRIGHTENING', name: '미백주사', image: 'pro_face_EXOSOME.png',
+        // 미백 부스터 기반(제품명 비노출) — 상세 성분 미기재
+        headline: '칙칙함은 덜어내고,\n맑고 환한 피부 톤으로',
+        desc: '피부 속까지 미백 유효 성분을 전달해 칙칙한 톤과 잡티, 피부 컨디션을 함께 관리하는 미백 부스터 시술입니다. 짧은 시술로 일상에 바로 복귀할 수 있습니다.',
+        tags: ['피부 톤', '칙칙함', '잡티', '광채'],
+        points: [
+          { title: '톤 · 잡티 관리', text: '멜라닌이 과하게 쌓여 칙칙해진 피부 톤과 잡티를 관리해 맑은 톤을 목표로 합니다.' },
+          { title: '항산화 · 컨디션', text: '자외선과 스트레스로 지친 피부의 항산화 관리와 보습으로 피부 컨디션을 함께 정돈합니다.' },
+          { title: '짧은 시술 · 빠른 일상', text: '시술 시간이 짧고 회복 부담이 적어, 촬영·행사 전 관리로도 선택하기 좋습니다.' },
+        ],
+        recommend: ['피부가 칙칙하고 생기 없어 보이는 분', '잡티·색소로 톤이 고르지 않은 분', '중요한 일정을 앞두고 톤을 정돈하고 싶은 분', '볼류머샷·실리프팅과 함께 관리하고 싶은 분'],
+        care: '개인의 피부 상태에 따라 여러 회차 관리가 필요할 수 있으며, 시술 부위에 일시적인 붉어짐이나 붓기가 있을 수 있습니다.',
+      },
+    };
+
+    function FaceSkinPage({ kind }) {
+      const d = FACE_SKIN[kind];
+      return (
+        <SubLayout title="페이스&스킨" en="FACE & SKIN" tabs={FACE_TABS}>
+          <Container>
+            <ProgramIntro eyebrow={d.eyebrow} name={d.name} headline={d.headline} desc={d.desc} image={d.image} tags={d.tags} />
+
+            <section className="mt-20 md:mt-[120px]">
+              <BlockTitle eyebrow="POINT" title={`${d.name}, 이렇게 진행합니다`} />
+              <div className="mt-10 md:mt-14 grid md:grid-cols-3 gap-5">
+                {d.points.map((p, i) => (
+                  <div key={p.title} className="border border-black/10 px-7 py-9">
+                    <span className="font-prata text-2xl text-mint">{String(i + 1).padStart(2, '0')}</span>
+                    <h4 className="mt-3 text-lg font-medium text-ink-dark">{p.title}</h4>
+                    <p className="mt-3 text-[15px] leading-[1.8] text-[#555]">{p.text}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-20 md:mt-[120px]"><RecommendList items={d.recommend} /></section>
+
+            {d.care && <p className="mt-10 text-center text-sm leading-[1.8] text-[#666]">※ {d.care}</p>}
+            {d.link && (
+              <p className="mt-10 text-center"><Link to={d.link.to} className="line-link text-sm font-medium text-ink-brown">{d.link.label}</Link></p>
+            )}
+
+            <ProgramCTA title={`${d.name} 상담 받아보기`} />
+            <MedicalNotice />
+          </Container>
+        </SubLayout>
+      );
+    }
+
     function FaceBalancePage() {
       return (
         <SubLayout title="프로그램" en="BODY PROGRAM" tabs={PROGRAM_TABS}>
           <Container>
-            <ProgramIntro eyebrow="FACE × BODY BALANCE" name="얼굴 비대칭 바로 프로그램"
+            <ProgramIntro eyebrow="BARO PACKAGE · FACE × BODY BALANCE" name="바로 패키지"
               headline={'한쪽만 맞추는 관리가 아니라,\n얼굴과 몸의 밸런스를 함께 봅니다.'}
               desc="좌우가 다르게 보이는 얼굴, 턱선과 광대의 높이 차이, 목·어깨 긴장과 자세 밸런스까지 개인별 상태를 확인해 맞춤 관리합니다."
               image="procedure_facial_ratio_1.png"
@@ -2510,7 +2672,7 @@
 
             <section className="mt-12 md:mt-[100px]">
               <BlockTitle eyebrow="INCLUDED" title="예신 프로그램 기본 구성" />
-              <div className="mt-10 md:mt-14"><InfoList items={BRIDE.items} cols={3} /></div>
+              <div className="mt-10 md:mt-14"><InfoList items={BRIDE.items} cols={3} rounded /></div>
             </section>
 
             <ProgramCTA title="예신 상담, 날짜만 알려주세요" desc="촬영·본식 일정과 드레스 디자인을 알려주시면 남은 기간에 맞춘 플랜을 안내드립니다." />
@@ -2613,6 +2775,13 @@
             <Route path="/program/arm" element={<AreaProgramPage area="arm" />} />
             <Route path="/program/shoulder" element={<AreaProgramPage area="shoulder" />} />
             <Route path="/program/calf" element={<AreaProgramPage area="calf" />} />
+            <Route path="/program/thigh" element={<AreaProgramPage area="thigh" />} />
+            <Route path="/program/belly" element={<AreaProgramPage area="belly" />} />
+            <Route path="/face/nose" element={<FaceSkinPage kind="nose" />} />
+            <Route path="/face/vline" element={<FaceSkinPage kind="vline" />} />
+            <Route path="/face/asymmetry" element={<FaceSkinPage kind="asymmetry" />} />
+            <Route path="/face/volumer" element={<FaceSkinPage kind="volumer" />} />
+            <Route path="/face/whitening" element={<FaceSkinPage kind="whitening" />} />
             <Route path="/program/face-balance" element={<FaceBalancePage />} />
             <Route path="/program/bride" element={<BrideProgramPage />} />
             <Route path="/program/wedding" element={<BrideProgramPage />} />
