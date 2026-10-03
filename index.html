@@ -2056,6 +2056,8 @@
       brideBack: 'https://images.unsplash.com/photo-1631386749697-ca71a14f89c9?w=1200&q=80&auto=format&fit=crop',
       // Jannes Jacobs, Unsplash License (복부 실리프팅 카드)
       belly: 'https://images.unsplash.com/photo-1549445069-d1125f7a129c?w=800&q=80&auto=format&fit=crop',
+      // Pexels License (pexels.com/photo/6076104) — 다리에 침을 놓는 사진 (종아리 붓기침 카드)
+      calfAcu: 'https://images.pexels.com/photos/6076104/pexels-photo-6076104.jpeg?auto=compress&cs=tinysrgb&w=800',
     };
 
     const MEDICAL_NOTICE = '시술 효과와 필요한 횟수는 체형·생활 습관에 따라 개인차가 있으며, 진료 후 안내드립니다. 시술 부위에 일시적인 멍·붓기·뻐근함이 생길 수 있습니다.';
@@ -2152,12 +2154,12 @@
         types: [
           { name: '근육형', desc: '종아리 알이 단단하게 발달한 타입', plan: ['여리주사', '리바이브'] },
           { name: '부종형', desc: '저녁마다 붓고 무거운 타입', plan: ['리바이브', '아쿠아밸런스환', '붓기침'] },
-          { name: '지방형', desc: '손으로 잡히는 군살이 있는 타입', plan: ['여리주사', '리바이브', '미쿨S'] },
+          { name: '지방형', desc: '손으로 잡히는 군살이 있는 타입', plan: ['여리주사', '리바이브'] },
         ],
         gallery: [
           { img: 'pro_fat_list_04.png', name: '아쿠아밸런스환', text: '잘 붓는 체질을 위한\n순환 처방' },
-          { img: 'pro_fat_list_05.png', name: '붓기침', text: '침 자극으로\n혈류 순환을 돕는 관리' },
-          { img: 'pro_fat_2.png', name: '미쿨S', text: '냉각 에너지로\n지방층 관리' },
+          { img: UNSPLASH.calfAcu, name: '붓기침', text: '침 자극으로\n혈류 순환을 돕는 관리' },
+          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n종아리 라인 관리' },
         ],
       },
       belly: {
