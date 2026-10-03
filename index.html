@@ -138,6 +138,7 @@
       { label: '승모 슬림', href: '/program/shoulder' },
       { label: '팔뚝 슬림', href: '/program/arm' },
       { label: '복부 슬림', href: '/program/belly' },
+      { label: '힙 라인 업', href: '/program/hip' },
       { label: '허벅지 슬림', href: '/program/thigh' },
       { label: '종아리 슬림', href: '/program/calf' },
     ];
@@ -197,22 +198,22 @@
         image: unsplashHero('1650056201297-4a6d7ec6ca6c', '30% center', 'bg-black/30'),
         light: '코끝부터 턱선까지,', bold: '실로 디자인하는|얼굴 라인',
         en: 'Nose & face thread lifting.',
-        more: { label: '코프팅 · 실리프팅', to: '/procedure/contour' },
+        more: { label: '코프팅 · 실리프팅', to: '/face/nose' },
       },
       {
         image: unsplashHero('1728727217834-b190862837a3', 'center 35%', 'bg-black/25'),
         pcShift: 'md:scale-[1.2] md:origin-right', // 얼굴을 왼쪽으로
         light: '부족한 곳은 채우고,|과한 곳은 덜어내어', bold: '균형 잡힌 볼륨으로',
         en: 'Fill what' + String.fromCharCode(8217) + 's missing, refine what' + String.fromCharCode(8217) + 's too much.',
-        more: { label: '스킨부스터', to: '/procedure/facial' },
+        more: { label: '볼류머샷', to: '/face/volumer' },
       },
     ];
 
     const PRODUCTS = [
       { img: 'home_product_1.png', name: '슬래머', color: 'bg-mint', tag: '필요한 볼륨은 지키고! 뺄곳만 뺀다!',
-        desc: '당귀, 천궁 등 약재로 조혈 작용을 돕고 여성 호르몬 분비를 활성화하여 아름다운 볼륨을 유지합니다. 불필요한 부분만 집중 관리해 S라인 체형을 완성합니다.' },
+        desc: '당귀, 천궁 등 약재로 조혈 작용을 돕고 부담스럽지 않은 편안한 다이어트를 통해 아름다운 볼륨을 유지합니다. 불필요한 부분만 집중 관리해 S라인 체형을 완성합니다.' },
       { img: 'home_product_2.png', name: '슬리머', color: 'bg-mint-500', tag: '건강하고 슬림하게! 쉽고 편안한 다이어트!',
-        desc: '슬림한 몸매를 원하는 분들이 우선적으로 시작할 수 있는 다이어트 기본 프로그램입니다. 건강한 라인을 만들어주는 보다 안전한 다이어트가 필요한 분들에게 처방합니다.' },
+        desc: '슬림한 표준 몸매를 원하는 분들을 위해 한 단계 강화한 다이어트 프로그램입니다. 건강한 라인을 만들기 원하는, 다이어트 경험이 있는 분들에게 처방합니다.' },
       { img: 'home_product_3.png', name: '슬랜더', color: 'bg-mint-700', tag: '한 번쯤은 완벽하게 마른 슬랜더가 되고 싶은 당신을 위한 기회!',
         desc: '마른 체형이 주는 시크하고 세련된 라인을 원하신다면, 고강도 체지방 감량과 확실하게 마른 슬랜더 체형을 인생에 단 한 번, 완벽한 변화를 원하는 분에게 처방합니다.' },
     ];
@@ -773,7 +774,7 @@
     // ----------------------------------------
     // 홈 — 바디 시술 우선 구성 (블로그 기준 패키지 구성 반영)
     //   쉐딩 패키지: 리바이브(극초단파) + 쉐딩주사  / 팔뚝·복부
-    //   여리 패키지: 여리침 → 리바이브 → 여리주사 + 체형교정 / 승모근·종아리
+    //   여리 패키지: 체형교정 → 여리침 → 리바이브 → 여리주사 / 승모근·종아리
     // ----------------------------------------
     const HOME_PACKAGES = [
       {
@@ -781,7 +782,7 @@
         en: 'SHADING PACKAGE', name: '쉐딩 패키지', area: '팔뚝 · 복부 · 허벅지',
         copy: '탄력은 채우고, 군살은 덜어내는 바디 라인 케어',
         steps: [
-          { t: '리바이브', d: '극초단파 에너지로 피부 깊은 층 탄력 케어' },
+          { t: '리바이브 · 울핏', d: '부위에 맞는 지방분해·탄력 케어 기기로 관리' },
           { t: '쉐딩주사', d: '지방·붓기가 고인 부위를 디자인해 주입' },
         ],
       },
@@ -790,10 +791,10 @@
         en: 'YEORI PACKAGE', name: '여리 패키지', area: '승모근 · 종아리',
         copy: '뭉친 근육은 풀고, 솟은 라인은 여리하게',
         steps: [
+          { t: '체형교정', d: '라인을 무너뜨리는 자세 진단 및 교정' },
           { t: '여리침', d: '과하게 긴장된 근육의 긴장도 완화' },
           { t: '리바이브', d: '목·어깨로 이어지는 라인 정돈' },
           { t: '여리주사', d: '근육 이완 약침으로 섬세하게 마무리' },
-          { t: '체형교정', d: '라인을 무너뜨리는 자세까지 함께' },
         ],
         note: '종아리는 여리주사 + 리바이브로 진행합니다.',
       },
@@ -802,7 +803,7 @@
     const HOME_FACE_SKIN = [
       // 코프팅 이미지: 병원 자체 이미지(원본 사이트 procedure_contour_region_4 — 동양인 옆모습 + 콧대 화살표)
       { to: '/face/nose', img: 'procedure_contour_region_4.png', pos: 'center 40%', en: 'NOSE THREAD LIFT', name: '코프팅', desc: '녹는 PDO 실로 콧대와 코끝의 높이·각도를 디자인하는 코 실리프팅' },
-      { to: '/face/vline', img: 'procedure_contour_region_5.png', en: 'V-LINE LIFTING', name: '브이라인 리프팅', desc: '이중턱 · 팔자 · V라인까지, 얼굴 처짐을 고려한 실리프팅' },
+      { to: '/face/vline', img: 'procedure_contour_region_5.png', en: 'V-LINE LIFTING', name: '브이라인 리프팅', desc: '리바이브와 쉐딩주사로 이중턱부터, 부족하면 실리프팅으로 마무리' },
       { to: '/face/volumer', img: 'pro_face_PLLA.png', en: 'SKIN BOOSTER', name: '볼류머샷 · 미백주사', desc: '꺼진 부위를 채우는 볼류머샷, 맑은 톤을 위한 미백주사' },
       // 안면비대칭 이미지: Unsplash License (unsplash.com/photos/Zscl2b_wrCU, Dmitriy Ilkevich) — 원장님 선택
       // 세로 원본이라 얼굴~턱 선 손까지 보이도록 위쪽(22%) 기준으로 표시
@@ -855,9 +856,9 @@
             <div className="relative min-h-[360px] md:min-h-[520px] order-1 lg:order-2 overflow-hidden">
               <img src={img('home_initial_bg.png')} alt="라인앤코한의원 공간" loading="lazy" className="absolute inset-0 w-full h-full object-cover object-[35%_center]" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-              <div className="absolute left-6 bottom-6 md:left-10 md:bottom-10 flex items-center gap-3 text-white/90">
-                <img src={img('logo.svg')} alt="LINE&CO" className="h-[12px] md:h-[15px] w-auto brightness-0 invert" />
-                <span className="font-roboto text-[11px] md:text-xs tracking-[3px]">GANGNAM</span>
+              <div className="absolute left-6 bottom-6 md:left-10 md:bottom-10 flex items-end gap-3 text-white/90">
+                <img src={img('logo.svg')} alt="LINE&CO" className="h-[14.4px] md:h-[18px] w-auto brightness-0 invert" />
+                <span className="font-roboto text-[11px] md:text-xs leading-none tracking-[3px]">GANGNAM</span>
               </div>
             </div>
           </div>
@@ -1041,12 +1042,15 @@
 
     function PhilosophySection() {
       return (
-        <section className="relative flex flex-col md:flex-row bg-cream">
-          <div className="md:w-1/2 aspect-[4/3] md:aspect-auto md:min-h-[600px]">
+        // 상단 배너와 붙어 보이지 않도록 컨테이너 안에 여백을 두고, 사진은 화면 절반 → 약 45% 크기로 축소
+        <section className="pt-16 md:pt-[100px]">
+          <Container className="max-w-[1080px]">
+            <div className="flex flex-col md:flex-row bg-cream">
+          <div className="md:w-[45%] aspect-[4/3] md:aspect-auto md:min-h-[380px]">
             {/* 병원 자체 사진(home_adjust_bg)에서 손목시계를 지운 수정본 — 프로젝트 images/ 폴더에 보관 */}
-            <img src="images/philosophy_herbs.jpg" alt="탕전실에서 한약재를 살피는 원장" className="w-full h-full object-cover" loading="lazy" />
+            <img src="images/philosophy_herbs.jpg" alt="탕전실에서 한약재를 살피는 원장" className="w-full h-full object-cover object-[60%_center]" loading="lazy" />
           </div>
-          <div className="md:w-1/2 flex items-center px-8 py-16 md:px-[100px]">
+          <div className="md:w-[55%] flex items-center px-7 py-12 md:px-16 md:py-14">
             <div>
               <img src={`${IMG}/logo.svg`} alt="라인앤코한의원" className="h-[22px] w-auto" />
               <p className="mt-10 text-[15px] md:text-base leading-[1.9] tracking-[-0.48px] text-ink">
@@ -1059,6 +1063,8 @@
               </p>
             </div>
           </div>
+            </div>
+          </Container>
         </section>
       );
     }
@@ -1244,7 +1250,7 @@
               const on = t.href === path;
               return (
                 <Link key={t.href} to={t.href} aria-current={on ? 'page' : undefined}
-                  className={`group relative flex items-center justify-center text-center flex-1 basis-1/2 sm:basis-1/4 max-w-[290px] min-h-[40px] md:min-h-[50px] px-2 text-[13px] md:text-sm border-b border-black/10 transition-colors ${on ? 'text-ink font-medium' : 'text-[#8d8d8d] hover:text-ink'}`}>
+                  className={`group relative flex items-center justify-center text-center flex-1 ${items.length > 4 ? 'basis-1/3 md:basis-0' : 'basis-1/2 sm:basis-1/4'} max-w-[290px] min-h-[40px] md:min-h-[50px] px-2 text-[13px] md:text-sm border-b border-black/10 transition-colors ${on ? 'text-ink font-medium' : 'text-[#8d8d8d] hover:text-ink'}`}>
                   {t.label}
                   <span className={`absolute left-0 bottom-[-1px] h-[2px] bg-mint-400 transition-all duration-[400ms] ${on ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                 </Link>
@@ -1326,7 +1332,13 @@
           {items.map(it => (
             <li key={it.name} className="text-center">
               <div className={`w-full overflow-hidden bg-cream ${rounded ? 'rounded-[10px] aspect-square' : ''}`}>
-                <img src={img(it.img)} alt={it.name} loading="lazy" className={`w-full ${rounded ? 'h-full object-cover' : 'h-auto'}`} />
+                {it.imgs ? (
+                  <div className="grid grid-cols-2 gap-1 h-full">
+                    {it.imgs.map(src => <img key={src} src={img(src)} alt="" loading="lazy" className="w-full h-full object-cover" />)}
+                  </div>
+                ) : (
+                  <img src={img(it.img)} alt={it.name} loading="lazy" className={`w-full ${rounded ? 'h-full object-cover' : 'h-auto'}`} />
+                )}
               </div>
               <p className="pt-6 md:pt-[30px] text-lg md:text-2xl font-medium leading-[1.4] tracking-[-0.48px] text-ink">{it.name}</p>
               {it.text && <p className="pt-3 md:pt-5 text-[15px] md:text-base leading-[1.75] tracking-[-0.18px] text-ink"><Lines text={it.text} /></p>}
@@ -1368,7 +1380,7 @@
         title: '윤곽/실리프팅 (매선)', desc: '피부에 얇고 매끈한 녹는 실을 삽입하여 콜라겐 생성을 촉진하고 피부의 탄력과 리프팅 효과를 제공하는 한방 치료입니다.',
         items: [
           { img: 'procedure_contour_1.png', title: '바디 실리프팅', desc: '가슴 UP 볼륨 리프팅 / 힙 UP 볼륨 리프팅 / 팔뚝, 옆구리, 허벅지 타이트닝 등 피부에 의료용 실을 삽입하여 피부의 탄력과 리프팅 효과를 극대화 하는 치료입니다.' },
-          { img: 'procedure_contour_2.png', title: '지방컷약침 / 라인업약침', desc: '지방의 양과 처짐 정도에 따라 2가지 라인업의 약침을 조합하여 지방층, 피내층에 주입하여 지방, 셀룰라이트를 분해하고 라인을 개선합니다.' },
+          { img: 'procedure_contour_2.png', title: '쉐딩주사', desc: '지방의 양과 처짐 정도에 따라 지방층과 피내층에 나눠 설계해 주입하여, 지방·셀룰라이트를 관리하고 라인을 정돈합니다.' },
         ],
       },
     };
@@ -1446,7 +1458,7 @@
           { img: 'pro_fat_1.png', name: '리바이브', text: '마이크로 웨이브 시술로 지방세포가 많은 부위를\n직접 자극하여 볼륨을 줄입니다.' },
           { img: 'pro_fat_2.png', name: '미쿨S', text: '지방세포를 냉동시켜 분해합니다.' },
           { img: 'pro_fat_3.png', name: '울핏', text: 'HIFU 시술로 지방이 제거된 피부를 타이트하게 합니다.' },
-          { img: 'pro_fat_4.png', name: '지방컷 약침', text: '지방컷 약물로 지방을 녹입니다' },
+          { img: 'pro_fat_4.png', name: '쉐딩주사', text: '지방이 고인 부위를\n디자인해 주입합니다' },
         ],
       }],
       parts: [
@@ -1463,8 +1475,7 @@
         title: '수술이 부담스러운 분들을 위한\n비수술 프로그램',
         text: '절개나 마취 없이 원하는 부위의 지방을\n효과적으로 제거할 수 있습니다.',
         items: [
-          { img: 'pro_chin_list_01.png', name: '지방컷약침', text: '턱의 옆, 아래 부분의 지방 소멸을 위해\n지방컷약침을 주사합니다.' },
-          { img: 'pro_chin_list_02.png', name: '라인업약침', text: '턱 피부의 탄력과 라인 리프팅을\n위해 라인업약침을 주사합니다.' },
+          { img: 'pro_chin_list_01.png', name: '쉐딩주사', text: '턱 옆·아래 지방을 정리하고\n턱 라인을 또렷하게 정돈합니다.' },
           { img: 'pro_fat_list_02.png', name: '리바이브', text: '날렵한 턱선을 위해 마이크로웨이브\n시술로 지방과 피부를 자극하여 마무리 합니다.' },
         ],
       }]},
@@ -1488,6 +1499,8 @@
     // ========================================
     // 📄 Sub Pages — 한의원 소개
     // ========================================
+    const DOCTOR3_NAME = '김지환'; // 진료원장 김지환
+
     function IntroductionPage() {
       const promises = [
         { n: 1, title: '능동적인 태도로 융합적 치료를 지향합니다.', text: '원인을 치료하는 한의학을 토대로 현대적 의료기기를\n적극적으로 사용하여 치료의 정확성과 안전성을\n최대한으로 높이고자 합니다.' },
@@ -1502,25 +1515,26 @@
               <p className="mt-6 text-[15px] md:text-base leading-7 text-ink">강남역에 위치한 다이어트 전문 한의원으로 본원에서 쌓은 풍부한 경험으로 연구에 앞장서겠습니다.</p>
             </div>
 
+            {/* 원장 소개 순서: 김지환 → 조주연 → 공덕현 (사진 좌·우·좌 지그재그) */}
             <section className="mt-16 md:mt-[100px] flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
               <div className="w-full lg:w-[460px] shrink-0">
-                <img src={img('introduction_profile_1.jpg')} alt="진료원장 공덕현" className="w-full" />
+                <img src="images/profile3.jpg" alt={`진료원장 ${DOCTOR3_NAME}`.trim()} className="w-full" />
               </div>
               <div className="flex-1">
-                <h4 className="font-serif text-[22px] md:text-[28px] leading-[1.6] text-ink-dark">숨겨진 아름다움을 발견하고<br />빛나게 하는 특별한 공식이 존재합니다</h4>
+                <h4 className="font-serif text-[22px] md:text-[28px] leading-[1.6] text-ink-dark">줄어드는 숫자보다,<br />균형이 잡힌 몸을 봅니다</h4>
                 <div className="mt-8 space-y-4 text-[15px] md:text-base leading-[1.9] text-ink">
-                  <p>체질적으로 저는 식탐이 없고 기초대사량이 큰 편입니다.<br />저와 같은 신체 컨디션을 갖고 있다면 비만을 걱정할 필요는 없습니다.</p>
-                  <p>하지만 개인별로 컨디션은 다르고 이런 상태를 자연적으로 유지하기 어렵습니다.<br />따라서 이러한 상태를 유지할 수 있도록 도와주는 <b className="font-medium text-mint-700">한약과 관리 시스템</b>을 만들고자 하였습니다.</p>
-                  <p>여기에 검증된 기기와 시술을 활용하여 일률적인 마른 몸이 아닌 <b className="font-medium text-mint-700">내가 원하는 라인의 바디</b>를 만들면 좋겠다고 생각했습니다.</p>
-                  <p className="font-medium">이런 생각의 결과물이 라인앤코한의원입니다.</p>
+                  <p>다이어트와 라인 관리는 단순히 체중만 줄이는 게 아니라,<br className="hidden md:block" /> 몸 전체의 <b className="font-medium text-mint-700">대사 흐름과 구조적인 균형</b>을 함께 잡아주는 것이 핵심입니다.</p>
+                  <p>인체 정렬과 대사 기능을 다각도로 살펴, 환자분 한 분 한 분에게<br className="hidden md:block" /> 가장 어울리고 <b className="font-medium text-mint-700">건강한 라인</b>을 찾아드리겠습니다.</p>
+                  <p>반복되는 다이어트와 피부 고민으로 지치셨던 분들이 마음 편히 찾으실 수 있도록,</p>
+                  <p className="font-medium">밝고 따뜻한 진료로 일상의 자신감을 되찾아 드리겠습니다.</p>
                 </div>
                 <div className="mt-10 pt-8 border-t border-black/10">
-                  <p className="font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">공덕현</b></p>
+                  <p className="font-serif text-xl text-ink-dark">진료원장{DOCTOR3_NAME && <> <b className="font-semibold">{DOCTOR3_NAME}</b></>}</p>
                 </div>
               </div>
             </section>
 
-            {/* 조주연 원장 — 공덕현 원장과 같은 구성·톤(1인칭 메시지), 좌우 반전 배치 */}
+            {/* 조주연 원장 — 사진 오른쪽 */}
             <section className="mt-20 md:mt-[140px] flex flex-col lg:flex-row-reverse gap-10 lg:gap-20 items-start">
               <div className="w-full lg:w-[460px] shrink-0">
                 <img src={img('profile2.jpg')} alt="진료원장 조주연" className="w-full" loading="lazy" />
@@ -1535,6 +1549,25 @@
                 </div>
                 <div className="mt-10 pt-8 border-t border-black/10">
                   <p className="font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">조주연</b></p>
+                </div>
+              </div>
+            </section>
+
+            {/* 공덕현 원장 — 사진 왼쪽 */}
+            <section className="mt-20 md:mt-[140px] flex flex-col lg:flex-row gap-10 lg:gap-20 items-start">
+              <div className="w-full lg:w-[460px] shrink-0">
+                <img src={img('introduction_profile_1.jpg')} alt="진료원장 공덕현" className="w-full" loading="lazy" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-serif text-[22px] md:text-[28px] leading-[1.6] text-ink-dark">숨겨진 아름다움을 발견하고<br />빛나게 하는 특별한 공식이 존재합니다</h4>
+                <div className="mt-8 space-y-4 text-[15px] md:text-base leading-[1.9] text-ink">
+                  <p>체질적으로 저는 식탐이 없고 기초대사량이 큰 편입니다.<br />저와 같은 신체 컨디션을 갖고 있다면 비만을 걱정할 필요는 없습니다.</p>
+                  <p>하지만 개인별로 컨디션은 다르고 이런 상태를 자연적으로 유지하기 어렵습니다.<br />따라서 이러한 상태를 유지할 수 있도록 도와주는 <b className="font-medium text-mint-700">한약과 관리 시스템</b>을 만들고자 하였습니다.</p>
+                  <p>여기에 검증된 기기와 시술을 활용하여 일률적인 마른 몸이 아닌 <b className="font-medium text-mint-700">내가 원하는 라인의 바디</b>를 만들면 좋겠다고 생각했습니다.</p>
+                  <p className="font-medium">이런 생각의 결과물이 라인앤코한의원입니다.</p>
+                </div>
+                <div className="mt-10 pt-8 border-t border-black/10">
+                  <p className="font-serif text-xl text-ink-dark">진료원장 <b className="font-semibold">공덕현</b></p>
                 </div>
               </div>
             </section>
@@ -1767,7 +1800,7 @@
         { no: 'Makeline 02', name: '메이크라인 환 부스트', en: 'Boost', checks: ['지방분해 성분 강화', '강력하고 빠른 다이어트'] },
       ];
       const prices = [
-        { name: 'MAKE LINE 메이크라인환', desc: '슬래머 / 슬리머 / 슬랜더 × 오리지널 · 부스트, 6종 중 맞춤 처방', points: ['초저분자 피쉬 콜라겐 함유', '작은 농축환 형태로 간편한 복용'], rows: [['1 개월', 226000, 300000], ['3 개월', 489000, 900000]] },
+        { name: '메이크라인환', desc: '슬래머 / 슬리머 / 슬랜더 × 오리지널 · 부스트, 6종 중 맞춤 처방', points: ['초저분자 피쉬 콜라겐 함유', '작은 농축환 형태로 간편한 복용'], rows: [['1 개월', 226000, 300000], ['3 개월', 489000, 900000]] },
         { name: '디톡스 환', desc: '다이어트 중 생기기 쉬운 변비와 정체된 장 운동을 관리하는 처방', points: ['일시적 배변 유도가 아닌 건강한 배변 리듬', '장 운동 개선으로 노폐물 배출', '마인·대황 복합 처방'], rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
         { name: '아쿠아 밸런스', desc: '수분 정체로 인한 붓기와 어혈을 관리해 몸과 다리를 가볍게 하는 처방', points: ['하체 중심 붓기 관리', '시술 후 멍·붓기, 생리통 등 어혈 관리', '웨딩·바디프로필 전 단기 집중 복용'], rows: [['1 개월', 100000, 150000], ['3 개월', 250000, 450000]] },
       ];
@@ -2029,11 +2062,11 @@
       shading: {
         eyebrow: 'SHADING PACKAGE', name: '쉐딩 패키지',
         headline: '탄력은 채우고,\n군살은 덜어내는 바디 라인 케어',
-        desc: '극초단파 기기 리바이브로 피부 깊은 층의 탄력을 관리하고, 쉐딩주사로 지방과 붓기가 고인 부위를 정리하는 패키지입니다. 팔뚝과 복부를 중심으로 턱선·허벅지까지 부위에 맞춰 설계합니다.',
+        desc: '리바이브·울핏 등 지방분해·탄력 케어 기기로 군살과 탄력을 관리하고, 쉐딩주사로 지방과 붓기가 고인 부위를 정리하는 패키지입니다. 팔뚝과 복부를 중심으로 턱선·허벅지까지 부위에 맞춰 설계합니다.',
         image: 'pro_part_6.png',
         tags: ['팔뚝', '복부', '옆구리', '허벅지', '턱선'],
         points: [
-          { title: '리바이브 — 탄력 케어', text: '극초단파(마이크로웨이브) 에너지를 피부 깊은 층까지 전달해 탄력을 관리합니다. 쿨링 시스템으로 시술 중 열감을 줄였습니다.' },
+          { title: '지방분해 · 탄력 케어 기기', text: '극초단파 기기 리바이브, 고강도 집속 초음파(HIFU) 울핏 등 부위와 피부 상태에 맞는 기기를 선택해 지방과 탄력을 함께 관리합니다.' },
           { title: '쉐딩주사 — 지방·붓기 관리', text: '지방과 붓기가 함께 고인 부위를 진료 후 디자인해 주입합니다. 한약재 기반 약침을 사용합니다.' },
           { title: '라인 전체의 균형', text: '한 부위만이 아니라 팔뚝·복부·턱선처럼 함께 신경 쓰이는 부위를 묶어 전체 균형을 봅니다.' },
         ],
@@ -2043,9 +2076,9 @@
           '드레스·수영복 등 노출 전에 라인을 정돈하고 싶은 분',
           '다이어트 후 남은 군살이 신경 쓰이는 분',
         ],
-        steps: [['1:1 진료', '체형 · 부위 확인'], ['리바이브', '극초단파 탄력 케어'], ['쉐딩주사', '지방 · 붓기 부위 주입'], ['경과 확인', '다음 회차 플랜 조정']],
+        steps: [['1:1 진료', '체형 · 부위 확인'], ['기기 케어', '리바이브 · 울핏 등'], ['쉐딩주사', '지방 · 붓기 부위 주입'], ['경과 확인', '다음 회차 플랜 조정']],
         gallery: [
-          { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n깊은 층 탄력 케어' },
+          { imgs: ['pro_fat_1.png', 'pro_fat_3.png'], name: '리바이브 · 울핏', text: '리바이브·울핏 등 부위에 맞는\n지방분해·탄력 케어 기기로 관리' },
           { img: 'pro_fat_4.png', name: '쉐딩주사', text: '지방·붓기가 고인 부위를\n디자인해 주입' },
           { img: 'procedure_contour_region_3.png', name: '팔뚝 · 복부 라인', text: '드레스·민소매 핏을\n좌우하는 부위부터' },
         ],
@@ -2053,7 +2086,7 @@
       yeori: {
         eyebrow: 'YEORI PACKAGE', name: '여리 패키지',
         headline: '뭉친 근육은 풀고,\n솟은 라인은 여리하게',
-        desc: '승모근·종아리처럼 뭉치고 도드라져 보이는 부위는 근육 크기만의 문제가 아닌 경우가 많습니다. 승모근은 여리침 → 리바이브 → 여리주사 → 체형교정의 단계로, 종아리는 여리주사와 리바이브로 진행합니다.',
+        desc: '승모근·종아리처럼 뭉치고 도드라져 보이는 부위는 근육 크기만의 문제가 아닌 경우가 많습니다. 승모근은 체형교정 → 여리침 → 리바이브 → 여리주사의 단계로, 종아리는 여리주사와 리바이브로 진행합니다.',
         image: 'pro_part_3.png',
         tags: ['승모근', '종아리', '목·어깨 라인'],
         points: [
@@ -2067,11 +2100,11 @@
           '민소매를 입을 때 팔 윗부분 라인이 고민인 분',
           '라인과 함께 뭉침·뻐근함도 관리하고 싶은 분',
         ],
-        steps: [['여리침', '근육 긴장도 완화'], ['리바이브', '목·어깨 라인 정돈'], ['여리주사', '근육 이완 약침'], ['체형교정', '자세 · 정렬 관리']],
+        steps: [['체형교정', '자세 · 정렬 관리'], ['여리침', '근육 긴장도 완화'], ['리바이브', '목·어깨 라인 정돈'], ['여리주사', '근육 이완 약침']],
         gallery: [
           { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n목·어깨 라인을 매끄럽게' },
-          { img: 'pro_part_3.png', name: '여리주사', text: '근육 이완 약침으로\n솟은 라인을 여리하게' },
-          { img: 'program_chuna.png', name: '체형교정', text: '라인을 무너뜨리는\n자세부터 함께' },
+          { img: 'pro_part_3.png', name: '여리주사', text: '근육을 이완시키고 지방을 녹여주는 약침으로\n솟은 승모 라인을 여리하게' },
+          { img: 'program_chuna.png', name: '체형교정', text: '라인을 무너뜨리는\n자세 진단 및 교정' },
         ],
       },
     };
@@ -2083,8 +2116,8 @@
         desc: '팔뚝 라인은 지방, 탄력 저하, 근육이 섞여 있는 경우가 많습니다. 원인을 나눠 보고 필요한 방법만 조합합니다.',
         worries: ['팔을 들면 흔들리는 부분이 신경 쓰여요', '살은 빠졌는데 팔뚝만 그대로예요', '사진을 찍으면 팔이 넓게 퍼져 보여요', '팔 뒤쪽 피부가 처져 보여요'],
         types: [
-          { name: '지방형', desc: '손으로 잡히는 군살이 많은 타입', plan: ['쉐딩주사', '리바이브', '미쿨S'] },
-          { name: '탄력 저하형', desc: '감량 후 피부가 늘어진 타입', plan: ['울핏', '라인업 약침', '팔뚝 타이트닝 매선'] },
+          { name: '지방형', desc: '손으로 잡히는 군살이 많은 타입', plan: ['쉐딩주사', '리바이브'] },
+          { name: '탄력 저하형', desc: '감량 후 피부가 늘어진 타입', plan: ['울핏', '리바이브', '팔뚝 타이트닝 매선'] },
           { name: '근육형', desc: '팔 윗부분이 단단하게 발달한 타입', plan: ['여리주사', '체형 교정'] },
         ],
         gallery: [
@@ -2142,6 +2175,29 @@
           { img: 'pro_fat_2.png', name: '미쿨S', text: '냉각 에너지로\n지방층 관리' },
         ],
       },
+      hip: {
+        // 내용: 병원 블로그(엉덩이 실리프팅 · 히프라인업 프로그램 · 코어스컬프 글) 기준, 전후 비교·횟수 환산 표현은 의료광고 기준상 제외
+        eyebrow: 'HIP LINE', name: '힙 라인 업', image: 'pro_hip.png',
+        headline: '처진 힙은 끌어올리고,\n탄탄한 라인은 오래',
+        desc: '엉덩이 라인은 피부와 대둔근의 탄력 저하, 골반 정렬, 근력 부족이 함께 영향을 줍니다. 라인앤코는 엉덩이 실리프팅으로 처진 조직을 끌어올리고, 코어스컬프로 엉덩이 근육을 자극해 라인을 유지하도록 돕습니다. 필요하면 체형교정을 함께 진행합니다.',
+        worries: ['운동을 해도 엉덩이가 잘 올라가지 않아요', '엉덩이와 허벅지 경계가 흐려 다리가 짧아 보여요', '다이어트 후 엉덩이 탄력이 떨어졌어요', '엉덩이가 작고 납작해 옆 라인이 밋밋해요'],
+        types: [
+          { name: '처짐형', desc: '엉덩이 아래쪽 조직이 처져 경계가 흐린 타입', plan: ['엉덩이 실리프팅', '코어스컬프'] },
+          { name: '볼륨 부족형', desc: '엉덩이가 작고 납작해 보이는 타입', plan: ['엉덩이 실리프팅', '코어스컬프'] },
+          { name: '자세형', desc: '골반이 뒤로 기울어 볼륨이 줄어 보이는 타입', plan: ['체형교정', '코어스컬프'] },
+        ],
+        gallery: [
+          { img: 'pro_hip_list_02.png', name: '엉덩이 실리프팅', text: '처진 조직을 위쪽 중심으로 모아\n의료용 실로 끌어올려 고정' },
+          { img: 'pro_hip_list_03.png', name: '코어스컬프', text: '고강도 자기장으로\n엉덩이 근육을 자극해 라인 유지' },
+          { img: 'pro_hip_list_01.png', name: '체형교정', text: '볼륨을 가리는 골반·자세를\n추나로 함께 교정' },
+        ],
+        care: [
+          ['시술 시간', '엉덩이 실리프팅은 디자인 후 실제 시술 15~20분 내외'],
+          ['일상 복귀', '시술 후 바로 일상생활 가능'],
+          ['주의 사항', '1주간 앉을 때 주의, 2~3주간 격한 엉덩이 운동은 피해 주세요'],
+          ['코어스컬프', '옷을 입은 채 누워서 받는 비접촉 방식'],
+        ],
+      },
       thigh: {
         // 이미지: 병원 원본 사이트 바디 라인 사진 — 카드에서는 허벅지 부분(하단)이 보이도록 pos 지정
         eyebrow: 'THIGH LINE', name: '허벅지 슬림', image: 'procedure_contour_region_3.png', pos: 'center 78%',
@@ -2165,8 +2221,8 @@
       focus: [
         { area: '어깨 · 쇄골', plan: '여리주사', img: 'pro_part_3.png', note: '오프숄더·튜브톱 드레스' },
         { area: '팔뚝', plan: '쉐딩주사 · 울핏', img: 'pro_part_6.png', note: '민소매·슬리브리스' },
-        { area: '등 · 브라라인', plan: '쉐딩주사 · 미쿨S', img: 'pro_part_5.png', note: '백리스·깊은 뒷라인' },
-        { area: '얼굴 윤곽 · 피부', plan: '브이라인 리프팅 · 코프팅 · 미백주사', img: 'pro_face.png', note: '웨딩 촬영 · 본식 메이크업' },
+        { area: '등 · 브라라인', plan: '쉐딩주사 · 리바이브', img: 'pro_part_5.png', note: '백리스·깊은 뒷라인' },
+        { area: '얼굴 윤곽 · 피부', plan: '브이라인 리프팅 · 코프팅 · 볼류머샷 · 미백주사', img: 'pro_face.png', note: '웨딩 촬영 · 본식 메이크업' },
       ],
       // 얼굴 시술 일정: 볼륨은 서서히 차오르므로 일찍, 실리프팅은 붓기(1~2주) 고려해 D-4주 전까지, 톤 관리는 막바지
       timeline: [
@@ -2192,7 +2248,7 @@
     const MORE_PROGRAMS = [
       { to: '/program/fat', name: '부위별 지방파괴', img: 'pro_fat.png' },
       { to: '/program/swelling', name: '지흡 · 성형 후 관리', img: 'pro_swelling.png' },
-      { to: '/program/hip', name: '힙라인 UP', img: 'pro_hip.png' },
+      { to: '/program/hip', name: '힙 라인 업', img: 'pro_hip.png' },
       { to: '/program/bust', name: '가슴 볼륨 UP', img: 'pro_bust.png' },
       { to: '/program/chin', name: '이중턱 굿바이', img: 'pro_chin.png' },
       { to: '/program/face', name: '메이크라인 페이스', img: 'pro_face.png' },
@@ -2473,6 +2529,20 @@
               <div className="mt-10 md:mt-14"><InfoList items={d.gallery} cols={3} rounded /></div>
             </section>
 
+            {d.care && (
+              <section className="mt-20 md:mt-[120px]">
+                <BlockTitle eyebrow="CARE GUIDE" title="시술 전후 안내" />
+                <dl className="mt-10 md:mt-14 max-w-[820px] mx-auto border-t border-ink-dark/80">
+                  {d.care.map(([k, v]) => (
+                    <div key={k} className="flex flex-col sm:flex-row gap-1 sm:gap-6 py-5 border-b border-black/10">
+                      <dt className="sm:w-32 shrink-0 text-sm font-medium text-mint-700">{k}</dt>
+                      <dd className="text-[15px] leading-[1.7] text-ink">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+
             <ProgramCTA title={`${d.name} 상담 받아보기`} />
             <MedicalNotice />
           </Container>
@@ -2517,15 +2587,17 @@
       },
       vline: {
         eyebrow: 'V-LINE LIFTING', name: '브이라인 리프팅', image: 'procedure_contour_region_5.png',
+        // 진행 원칙: ① 지방분해 리프팅 기기(리바이브) + 쉐딩주사로 이중턱·브이라인 먼저 → ② 부족할 때만 실리프팅
         headline: '이중턱은 정리하고,\n턱선은 또렷하게',
-        desc: '녹는 PDO 실로 처진 얼굴 라인을 당겨 올리고, 필요한 경우 지방컷·라인업 약침과 리바이브를 함께 조합해 브이라인을 정돈합니다.',
-        tags: ['턱선', '이중턱', '팔자', '볼 처짐'],
+        desc: '먼저 지방분해 리프팅 기기 리바이브와 쉐딩주사로 이중턱과 턱 주변 군살을 정리해 브이라인을 만듭니다. 그래도 처짐이 남아 아쉬운 경우에만 실리프팅을 더해 라인을 끌어올립니다.',
+        tags: ['이중턱', '턱선', '브이라인', '볼 처짐'],
+        stepsTitle: '단계별로, 필요한 만큼만',
         points: [
-          { title: '동안 실리프팅', text: '볼 처짐, 팔자, 이중턱, 마리오네트 라인 등 얼굴 전반의 처짐을 고려해 실을 넣습니다.' },
-          { title: '약침 병행', text: '턱 아래 군살은 지방컷 약침, 피부 탄력은 라인업 약침으로 함께 관리합니다.' },
-          { title: '리바이브 마무리', text: '극초단파 기기로 턱선 주변 지방과 피부 탄력을 함께 관리합니다.' },
+          { title: '리바이브 · 지방분해 리프팅', text: '극초단파 에너지로 턱 아래와 턱선 주변의 지방을 관리하고, 피부 탄력을 함께 끌어올립니다.' },
+          { title: '쉐딩주사 · 이중턱 정리', text: '이중턱과 턱 옆 군살처럼 지방이 고인 부위를 디자인해 주입해 브이라인을 또렷하게 정돈합니다.' },
+          { title: '부족할 때만 실리프팅', text: '1·2단계 후에도 처짐이 남는 경우, 녹는 PDO 실로 처진 라인을 당겨 올려 마무리합니다.' },
         ],
-        recommend: ['턱선이 흐려지고 얼굴이 넓어 보이는 분', '이중턱이 신경 쓰이는 분', '팔자·볼 처짐이 고민인 분', '수술 없이 윤곽을 정돈하고 싶은 분'],
+        recommend: ['이중턱이 신경 쓰이는 분', '턱선이 흐려지고 얼굴이 넓어 보이는 분', '실리프팅 전에 부담 없는 방법부터 시작하고 싶은 분', '수술 없이 윤곽을 정돈하고 싶은 분'],
       },
       asymmetry: {
         eyebrow: 'FACE ASYMMETRY', name: '안면비대칭', image: 'https://images.unsplash.com/photo-1699206791200-414d95e68450?w=900&h=900&q=80&auto=format&fit=crop&crop=faces',
@@ -2578,10 +2650,12 @@
             <ProgramIntro eyebrow={d.eyebrow} name={d.name} headline={d.headline} desc={d.desc} image={d.image} tags={d.tags} />
 
             <section className="mt-20 md:mt-[120px]">
-              <BlockTitle eyebrow="POINT" title={`${d.name}, 이렇게 진행합니다`} />
+              <BlockTitle eyebrow={d.stepsTitle ? 'STEP' : 'POINT'} title={d.stepsTitle || `${d.name}, 이렇게 진행합니다`} />
               <div className="mt-10 md:mt-14 grid md:grid-cols-3 gap-5">
                 {d.points.map((p, i) => (
-                  <div key={p.title} className="border border-black/10 px-7 py-9">
+                  // stepsTitle 이 있으면 단계형: 마지막 단계는 '필요 시' 선택 단계로 점선 표시
+                  <div key={p.title} className={`relative px-7 py-9 border ${d.stepsTitle && i === d.points.length - 1 ? 'border-dashed border-mint-700/60 bg-cream' : 'border-black/10'}`}>
+                    {d.stepsTitle && i === d.points.length - 1 && <span className="absolute right-5 top-5 tag-line">필요 시</span>}
                     <span className="font-prata text-2xl text-mint">{String(i + 1).padStart(2, '0')}</span>
                     <h4 className="mt-3 text-lg font-medium text-ink-dark">{p.title}</h4>
                     <p className="mt-3 text-[15px] leading-[1.8] text-[#555]">{p.text}</p>
@@ -2640,7 +2714,6 @@
                 수술이 필요한 골격성 비대칭은 일부에 해당합니다.<br className="hidden md:block" />
                 한방재활의학과 전문의가 진료 후 비수술로 관리할 수 있는지 먼저 확인해 드립니다.
               </p>
-              <Link to="/procedure/facial" className="line-link mt-6 text-sm font-medium text-ink-brown">안면비대칭 · 피부관리 자세히 보기</Link>
             </section>
 
             <ProgramCTA title="얼굴 비대칭 상담 받아보기" desc="얼굴과 몸의 균형 상태를 확인한 뒤 필요한 단계만 제안드립니다." />
@@ -2810,6 +2883,7 @@
             <Route path="/program/calf" element={<AreaProgramPage area="calf" />} />
             <Route path="/program/thigh" element={<AreaProgramPage area="thigh" />} />
             <Route path="/program/belly" element={<AreaProgramPage area="belly" />} />
+            <Route path="/program/hip" element={<AreaProgramPage area="hip" />} />
             <Route path="/face/nose" element={<FaceSkinPage kind="nose" />} />
             <Route path="/face/vline" element={<FaceSkinPage kind="vline" />} />
             <Route path="/face/asymmetry" element={<FaceSkinPage kind="asymmetry" />} />
