@@ -2162,17 +2162,26 @@
         // 이미지: 병원 원본 사이트 복부 사진(pro_part_4 — 아랫배 관리 이미지)
         eyebrow: 'BELLY LINE', name: '복부 슬림', image: 'pro_part_4.png',
         headline: '앉아도 편안한,\n납작하고 탄탄한 복부',
-        desc: '복부는 지방, 늘어진 피부, 코어 근력, 붓기가 함께 영향을 줍니다. 쉐딩주사와 리바이브를 기본으로, 원인에 맞춰 바디 기기를 조합합니다.',
+        desc: '복부는 지방, 늘어진 피부, 코어 근력, 붓기가 함께 영향을 줍니다. 쉐딩주사와 리바이브를 기본으로 원인에 맞춰 바디 기기를 조합하고, 처짐이 심하거나 아쉬움이 남으면 복부 실리프팅을 더합니다.',
         worries: ['아랫배만 볼록하게 나와 보여요', '앉으면 옆구리와 뱃살이 접혀요', '출산·감량 후 뱃살이 늘어졌어요', '식후에 배가 쉽게 부풀어요'],
         types: [
           { name: '지방형', desc: '손으로 잡히는 뱃살이 두꺼운 타입', plan: ['쉐딩주사', '리바이브', '미쿨S'] },
-          { name: '탄력 저하형', desc: '출산·감량 후 피부가 늘어진 타입', plan: ['울핏', '리바이브'] },
+          { name: '탄력 저하형', desc: '출산·감량 후 피부가 늘어진 타입', plan: ['리바이브', '쉐딩주사', '울핏'], extra: '복부 실리프팅', note: '리바이브·쉐딩주사로 먼저 관리하고, 처짐이 심하거나 아쉬움이 남으면 복부 실리프팅을 더합니다.' },
           { name: '코어 약화형', desc: '복부 근력이 약해 배가 앞으로 나온 타입', plan: ['코어스컬프', '체형교정'] },
         ],
         gallery: [
           { img: 'pro_fat_1.png', name: '리바이브', text: '극초단파 에너지로\n넓은 부위 탄력 관리' },
+          { img: 'procedure_contour_1.png', name: '복부 실리프팅', text: '처진 배 피부와 조직을\n녹는 실로 당겨 고정' },
           { img: 'pro_hip_list_03.png', name: '코어스컬프', text: '자기장으로\n복부 코어 근육 자극' },
           { img: 'pro_fat_2.png', name: '미쿨S', text: '냉각 에너지로\n지방층 관리' },
+        ],
+        // 복부 실리프팅: 병원 블로그 '복부 실리프팅' 글 기준 (실 제품명·즉각 효과 표현은 제외)
+        careTitle: '복부 실리프팅 안내',
+        care: [
+          ['이런 분께', '출산·감량 후 배 피부가 늘어진 분, 배꼽 주변 주름이 신경 쓰이는 분, 절개 수술은 부담스러운 분'],
+          ['방법', '녹는 PDO 실을 진피층에 넣어 아래로 처진 조직을 중앙·위쪽으로 모아 당겨 고정합니다. 체형과 피부 두께에 맞춰 방향과 개수를 설계합니다.'],
+          ['시술 시간', '30~40분 내외, 시술 후 바로 일상생활 가능'],
+          ['주의 사항', '3일간 시술 부위에 물이 닿지 않게 하고, 1~2주간 심한 운동·사우나·마사지는 피해 주세요'],
         ],
       },
       hip: {
@@ -2517,7 +2526,14 @@
                             </li>
                           );
                         })}
+                        {t.extra && (
+                          <li className="flex items-center gap-2">
+                            <span className="text-[11px] text-[#888]">필요 시 +</span>
+                            <span className="tag-line border-dashed">{t.extra}</span>
+                          </li>
+                        )}
                       </ul>
+                      {t.note && <p className="mt-4 text-[13px] leading-[1.7] text-[#666]">{t.note}</p>}
                     </div>
                   </div>
                 ))}
@@ -2526,12 +2542,12 @@
 
             <section className="mt-20 md:mt-[120px]">
               <BlockTitle eyebrow="WITH" title="함께 쓰는 관리" />
-              <div className="mt-10 md:mt-14"><InfoList items={d.gallery} cols={3} rounded /></div>
+              <div className="mt-10 md:mt-14"><InfoList items={d.gallery} cols={d.gallery.length > 3 ? 4 : 3} rounded /></div>
             </section>
 
             {d.care && (
               <section className="mt-20 md:mt-[120px]">
-                <BlockTitle eyebrow="CARE GUIDE" title="시술 전후 안내" />
+                <BlockTitle eyebrow="CARE GUIDE" title={d.careTitle || '시술 전후 안내'} />
                 <dl className="mt-10 md:mt-14 max-w-[820px] mx-auto border-t border-ink-dark/80">
                   {d.care.map(([k, v]) => (
                     <div key={k} className="flex flex-col sm:flex-row gap-1 sm:gap-6 py-5 border-b border-black/10">
