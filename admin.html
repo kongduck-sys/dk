@@ -734,6 +734,15 @@
         } catch (e) { toast(e.message); } finally { setBusy(false); }
       };
 
+      // 목록에서 상태 바로 변경
+      const changeStatus = async (c, value) => {
+        try {
+          await api('/consults', { method: 'PATCH', query: { id: c.id }, body: { status: value } });
+          toast(`${c.name} · ${CONSULT_STATUS[value].label}(으)로 변경했습니다.`);
+          reload();
+        } catch (e) { toast(e.message); }
+      };
+
       const remove = async () => {
         setBusy(true);
         try {
@@ -784,7 +793,7 @@
                   {data.items.length === 0 ? <EmptyRow colSpan={7} text={dq || status !== 'all' ? '조건에 맞는 상담 신청이 없습니다.' : '아직 접수된 상담 신청이 없습니다.'} /> : data.items.map(c => (
                     <tr key={c.id} className="hover:bg-bg-card">
                       <td className="px-4 py-3 text-ink-light">{c.id}</td>
-                      <td className="px-4 py-3"><Badge className={CONSULT_STATUS[c.status].cls}>{CONSULT_STATUS[c.status].label}</Badge></td>
+                      <td className="px-4 py-3"><StatusPicker consult={c} onChange={changeStatus} /></td>
                       <td className="px-4 py-3 font-medium whitespace-nowrap">{c.name}{c.source === 'makeline_legacy' && <Badge className="ml-1.5 bg-ink/5 text-ink-light">기존</Badge>}</td>
                       <td className="px-4 py-3 whitespace-nowrap"><a href={`tel:${c.phone}`} className="hover:text-brand">{c.phone}</a></td>
                       <td className="px-4 py-3 max-w-[320px] truncate">{c.content || '-'}{c.memo && <span className="ml-2 text-xs text-mint-deep">📝</span>}</td>
@@ -804,6 +813,62 @@
           {selected && <ConsultDetail consult={selected} busy={busy} onClose={() => setSelected(null)} onSave={save} />}
           <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} onConfirm={remove}
             message="이 상담 신청을 삭제할까요? 삭제 후에는 되돌릴 수 없습니다." />
+        </>
+      );
+    }
+
+    // 상태 배지를 누르면 바로 아래에 상태 목록이 떠서 한 번에 변경
+    // (표가 가로 스크롤 영역 안이라 잘리지 않도록 화면 기준 fixed 로 띄움)
+    function StatusPicker({ consult, onChange }) {
+      const [pos, setPos] = useState(null);
+      const [saving, setSaving] = useState(false);
+      const cur = CONSULT_STATUS[consult.status];
+      useEffect(() => {
+        if (!pos) return;
+        const close = () => setPos(null);
+        const onKey = (e) => e.key === 'Escape' && close();
+        window.addEventListener('scroll', close, true);
+        window.addEventListener('resize', close);
+        document.addEventListener('keydown', onKey);
+        return () => { window.removeEventListener('scroll', close, true); window.removeEventListener('resize', close); document.removeEventListener('keydown', onKey); };
+      }, [pos]);
+      const open = (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const menuH = 4 * 36 + 12;
+        const up = r.bottom + menuH > window.innerHeight; // 화면 아래쪽이면 위로 띄움
+        setPos({ left: r.left, top: up ? r.top - menuH - 4 : r.bottom + 4 });
+      };
+      const pick = async (value) => {
+        setPos(null);
+        if (value === consult.status) return;
+        setSaving(true);
+        await onChange(consult, value);
+        setSaving(false);
+      };
+      return (
+        <>
+          <button type="button" onClick={(e) => (pos ? setPos(null) : open(e))} disabled={saving} aria-haspopup="listbox" aria-expanded={!!pos}
+            aria-label={`처리 상태: ${cur.label} (눌러서 변경)`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap cursor-pointer ring-1 ring-transparent hover:ring-brand/40 transition ${cur.cls} ${saving ? 'opacity-50' : ''}`}>
+            {saving ? '저장 중…' : cur.label}<span className="text-[9px] opacity-60" aria-hidden="true">▾</span>
+          </button>
+          {pos && (
+            <>
+              <div className="fixed inset-0 z-[120]" onClick={() => setPos(null)} />
+              <ul role="listbox" aria-label="처리 상태 선택" style={{ left: pos.left, top: pos.top }}
+                className="fixed z-[121] min-w-[120px] py-1.5 bg-white rounded-lg border border-line-soft shadow-[0_8px_24px_rgba(0,0,0,0.14)]">
+                {Object.entries(CONSULT_STATUS).map(([v, s]) => (
+                  <li key={v}>
+                    <button type="button" role="option" aria-selected={v === consult.status} onClick={() => pick(v)}
+                      className={`w-full h-9 px-3 flex items-center justify-between gap-3 text-sm hover:bg-bg ${v === consult.status ? 'font-medium' : ''}`}>
+                      <Badge className={s.cls}>{s.label}</Badge>
+                      {v === consult.status && <span className="text-brand text-xs" aria-hidden="true">✓</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </>
       );
     }
