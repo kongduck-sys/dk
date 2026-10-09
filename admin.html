@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>makeline 관리자 · 라인앤코한의원</title>
-  <link rel="icon" href="https://makeline.kr/Form/_guest/basic/images/favicon.jpg">
+  <link rel="icon" href="images/site/favicon.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -55,7 +55,7 @@
     // ========================================
     const API_BASE_URL = '/api/admin';
     const STORAGE_KEY = 'lineco_admin_demo_v1';
-    const SITE_IMG = 'https://makeline.kr/Form/_guest/basic/images';
+    const SITE_IMG = 'images/site'; // 홈페이지와 같은 이미지 폴더
 
     // 인증 만료(401) 시 로그인 화면으로 돌려보내기 위한 전역 콜백
     let onUnauthorized = () => {};
@@ -1127,7 +1127,7 @@
     ];
 
     // 미리보기용 이미지 주소 (원본 사이트 경로 · 업로드 이미지 · 외부 URL)
-    const imgSrc = (v) => (!v ? '' : v.startsWith('/UPLOAD') ? `https://makeline.kr${v}` : v);
+    const imgSrc = (v) => (!v ? '' : v.startsWith('/UPLOAD/') ? 'images/upload/' + v.slice('/UPLOAD/'.length) : v);
 
     // 오늘(한국 시간) 기준 노출 상태
     const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);

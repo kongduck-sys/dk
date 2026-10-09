@@ -8,17 +8,211 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
       ]
     },
     {
       "source": "/admin.html",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-        { "key": "Cache-Control", "value": "no-store" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/_adm",
+      "destination": "/admin.html",
+      "permanent": false
+    },
+    {
+      "source": "/_adm/:path*",
+      "destination": "/admin.html",
+      "permanent": false
+    },
+    {
+      "source": "/event_detail.php",
+      "has": [
+        {
+          "type": "query",
+          "key": "CODE",
+          "value": "(?<code>\\d+)"
+        }
+      ],
+      "destination": "/api/content?legacy_event=:code",
+      "permanent": false
+    },
+    {
+      "source": "/event_detail.php",
+      "destination": "/#/event",
+      "permanent": false
+    },
+    {
+      "source": "/index.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/introduction.php",
+      "destination": "/#/introduction",
+      "permanent": false
+    },
+    {
+      "source": "/setsus_apart.php",
+      "destination": "/#/setsus_apart",
+      "permanent": false
+    },
+    {
+      "source": "/makeline_diet.php",
+      "destination": "/#/makeline_diet",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_elasticity.php",
+      "destination": "/#/procedure/elasticity",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_elasticity_revive.php",
+      "destination": "/#/procedure/elasticity",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_elasticity_ulfit.php",
+      "destination": "/#/procedure/elasticity",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_elasticity_micool.php",
+      "destination": "/#/procedure/elasticity",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_line.php",
+      "destination": "/#/procedure/line",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_line_core.php",
+      "destination": "/#/procedure/line",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_line_triple.php",
+      "destination": "/#/procedure/line",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_contour.php",
+      "destination": "/#/procedure/contour",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_contour_injection.php",
+      "destination": "/#/procedure/contour",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_contour_lifting.php",
+      "destination": "/#/procedure/contour",
+      "permanent": false
+    },
+    {
+      "source": "/procedure_facial.php",
+      "destination": "/#/procedure/facial",
+      "permanent": false
+    },
+    {
+      "source": "/program.php",
+      "destination": "/#/program",
+      "permanent": false
+    },
+    {
+      "source": "/program_hip.php",
+      "destination": "/#/program/hip",
+      "permanent": false
+    },
+    {
+      "source": "/program_bust.php",
+      "destination": "/#/program/bust",
+      "permanent": false
+    },
+    {
+      "source": "/program_chin.php",
+      "destination": "/#/program/chin",
+      "permanent": false
+    },
+    {
+      "source": "/program_face.php",
+      "destination": "/#/program/face",
+      "permanent": false
+    },
+    {
+      "source": "/program_fat.php",
+      "destination": "/#/program/fat",
+      "permanent": false
+    },
+    {
+      "source": "/program_swelling.php",
+      "destination": "/#/program/swelling",
+      "permanent": false
+    },
+    {
+      "source": "/program_wedding.php",
+      "destination": "/#/program/bride",
+      "permanent": false
+    },
+    {
+      "source": "/event.php",
+      "destination": "/#/event",
+      "permanent": false
+    },
+    {
+      "source": "/login.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/join.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/password.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/treatment_member.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/treatment_member_page.php",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/treatment_review_real.php",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }

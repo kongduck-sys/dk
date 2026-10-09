@@ -22,7 +22,7 @@ const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const parseId = (v) => { const n = Number(v); return Number.isInteger(n) && n > 0 ? n : null; };
 const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
 // 외부 https 이미지, 원본 사이트 경로(/UPLOAD/...), 직접 올린 이미지만 허용
-const isImageUrl = (v) => /^https:\/\/[^\s"'<>]+$/.test(v) || /^\/UPLOAD\/[^\s"'<>]+$/.test(v) || new RegExp(`^${IMAGE_URL_PREFIX.replace(/[?]/g, '\\?')}\\d+$`).test(v);
+const isImageUrl = (v) => /^https:\/\/[^\s"'<>]+$/.test(v) || /^\/(UPLOAD|images)\/[^\s"'<>]+$/.test(v) || new RegExp(`^${IMAGE_URL_PREFIX.replace(/[?]/g, '\\?')}\\d+$`).test(v);
 
 // 보낸 항목만 검사해 { 컬럼: 값 } 으로 돌려준다. 문제가 있으면 { error }
 function pickFields(type, body, isCreate) {

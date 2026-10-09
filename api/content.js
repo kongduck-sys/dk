@@ -3,6 +3,7 @@
 //  GET                 노출 중인 팝업·이벤트 목록 (기간·노출 여부 반영)
 //  GET ?event=12       이벤트 1건 (상세 페이지)
 //  GET ?img=34         관리자가 업로드한 이미지 파일
+//  GET ?legacy_event=23  기존 사이트 이벤트 번호 → 새 이벤트 상세로 302 이동
 // ============================================================
 const { query } = require('../lib/db');
 const { ensureContentTables, ACTIVE_SQL, EVENT_COLS, POPUP_COLS } = require('../lib/content');
@@ -29,6 +30,21 @@ module.exports = async function handler(req, res) {
   }
   try {
     await ensureContentTables();
+
+    // 기존 사이트 이벤트 주소(event_detail.php?CODE=23)로 들어온 경우 → 이관된 같은 이벤트 상세로 이동
+    if (req.query.legacy_event !== undefined) {
+      const code = parseId(req.query.legacy_event);
+      let to = '/#/event';
+      if (code) {
+        const { rows } = await query(`SELECT id FROM public.site_events WHERE legacy_key = $1 AND ${ACTIVE_SQL}`, [`e:${code}`])
+          .catch(() => ({ rows: [] })); // legacy_key 컬럼이 아직 없는 DB여도 목록으로
+        if (rows[0]) to = `/#/event/${rows[0].id}`;
+      }
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
+      res.statusCode = 302;
+      res.setHeader('Location', to);
+      return res.end();
+    }
 
     if (req.query.img !== undefined) {
       const id = parseId(req.query.img);

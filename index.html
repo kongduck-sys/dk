@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>라인앤코한의원</title>
   <meta name="description" content="비만 전문 한의원 라인앤코 한의원 입니다. 비만 전문 한방재활의학과 전문의의 체계적인 관리를 받아보세요.">
-  <link rel="icon" href="https://makeline.kr/Form/_guest/basic/images/favicon.jpg">
+  <link rel="icon" href="images/site/favicon.jpg">
 
   <!-- 글꼴: Noto Serif KR(한글 제목) · Noto Sans KR(본문) · Libre Baskerville(영문 세리프, 이탤릭 포함) · Roboto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,8 +108,9 @@
     // ⚙️ 상수 / 데이터
     // ========================================
     const API_BASE_URL = '/api';
-    const ORIGIN = 'https://makeline.kr';
-    const IMG = `${ORIGIN}/Form/_guest/basic/images`;
+    // 이미지는 모두 이 사이트(images/) 안에 보관 — 기존 서버(makeline.kr, cafe24)에 의존하지 않음
+    const ORIGIN = 'https://makeline.kr'; // 숨겨 둔 로그인·회원가입 링크용 (기존 사이트 주소)
+    const IMG = 'images/site';
     const VIDEO_ID = '1g6G2wcIs1o';
     const RESERVE_URL = 'https://map.naver.com/p/entry/place/1617284822?placePath=%252Fhome%253Fentry%253Dplt&searchType=place&lng=127.0261436&lat=37.4988539&c=15.00,0,0,0,dh';
 
@@ -1225,7 +1226,7 @@
     // 📄 Sub Page Building Blocks (원본 sub-wrapper 스타일)
     // ========================================
     // 관리자가 올린 이미지(/api/content?img=…)는 이 사이트에서 바로 불러온다
-    const img = (name) => (/^https?:/.test(name) || name.startsWith('images/') || name.startsWith('/api/') ? name : name.startsWith('/') ? ORIGIN + name : `${IMG}/${name}`);
+    const img = (name) => (/^https?:/.test(name) || name.startsWith('images/') || name.startsWith('/api/') ? name : name.startsWith('/images/') ? name : name.startsWith('/UPLOAD/') ? 'images/upload/' + name.slice('/UPLOAD/'.length) : name.startsWith('/') ? ORIGIN + name : `${IMG}/${name}`);
 
     // 원본 image-title: 350px 배경 이미지 + 세리프 타이틀
     function SubLayout({ title, en, bg = 3, tabs, children }) {
