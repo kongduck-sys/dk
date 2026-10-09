@@ -44,8 +44,10 @@ http.createServer(async (req, res) => {
     if (!file.startsWith(path.join(ROOT, 'api') + path.sep) || !fs.existsSync(file)) {
       return res.status(404).json({ ok: false, message: 'Not Found' });
     }
-    let raw = '';
-    for await (const chunk of req) raw += chunk;
+    // 조각(chunk)을 바이트로 모은 뒤 한 번에 UTF-8 변환 — 문자열로 이어 붙이면 경계에 걸린 한글이 깨진다
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const raw = Buffer.concat(chunks).toString('utf8');
     try { req.body = raw ? JSON.parse(raw) : {}; } catch { req.body = {}; }
     req.query = Object.fromEntries(url.searchParams);
     try {
