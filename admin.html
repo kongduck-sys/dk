@@ -456,9 +456,64 @@
 
     const isActive = (item, path) => item.to === path || (item.sub || []).some(s => s.to === path);
 
+    // 비밀번호 규칙 (서버 api/admin/password.js 와 같은 기준 — 화면에서 미리 안내)
+    const PW_RULES = [
+      { label: '10자 이상', test: (p) => p.length >= 10 },
+      { label: '영문 대·소문자·숫자·특수문자 중 3가지 이상', test: (p) => [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(r => r.test(p)).length >= 3 },
+      { label: '1234 · admin · makeline 같은 쉬운 단어 없음', test: (p) => p && !['1234', 'password', 'qwerty', 'admin', 'lineco', 'makeline', '0000', '1111'].some(w => p.toLowerCase().includes(w)) },
+      { label: '같은 문자 4번 이상 연속 없음', test: (p) => p && !/(.)\1\1\1/.test(p) },
+    ];
+
+    function PasswordModal({ user, onClose }) {
+      const toast = useToast();
+      const [f, setF] = useState({ current: '', next: '', confirm: '' });
+      const [error, setError] = useState('');
+      const [busy, setBusy] = useState(false);
+      const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setError(''); };
+      const rulesOk = PW_RULES.every(r => r.test(f.next)) && !(user?.username && f.next.toLowerCase().includes(user.username.toLowerCase()));
+      const submit = async (e) => {
+        e?.preventDefault();
+        if (!f.current) return setError('현재 비밀번호를 입력하세요.');
+        if (!rulesOk) return setError('새 비밀번호가 규칙에 맞지 않습니다.');
+        if (f.next !== f.confirm) return setError('새 비밀번호 확인이 일치하지 않습니다.');
+        setBusy(true);
+        try {
+          const r = await api('/password', { method: 'POST', body: { current: f.current, next: f.next } });
+          toast(r.message || '비밀번호를 변경했습니다.');
+          onClose();
+        } catch (err) { setError(err.message); } finally { setBusy(false); }
+      };
+      return (
+        <Modal isOpen onClose={onClose} title="비밀번호 변경" size="sm"
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={submit} disabled={busy}>{busy ? '변경 중…' : '변경'}</Button></>}>
+          <form onSubmit={submit} className="space-y-4">
+            {/* 브라우저 비밀번호 관리자가 아이디를 알 수 있도록 (화면에는 안 보임) */}
+            <input type="text" name="username" autoComplete="username" value={user?.username || ''} readOnly hidden />
+            <Input id="pw-current" type="password" label="현재 비밀번호" value={f.current} onChange={set('current')} autoComplete="current-password" />
+            <Input id="pw-next" type="password" label="새 비밀번호" value={f.next} onChange={set('next')} autoComplete="new-password" />
+            <ul className="space-y-1 text-xs">
+              {PW_RULES.map(r => {
+                const ok = r.test(f.next);
+                return <li key={r.label} className={ok ? 'text-mint-deep' : 'text-ink-light'}>{ok ? '✓' : '·'} {r.label}</li>;
+              })}
+              <li className={f.next && !(user?.username && f.next.toLowerCase().includes(user.username.toLowerCase())) ? 'text-mint-deep' : 'text-ink-light'}>
+                {f.next && !(user?.username && f.next.toLowerCase().includes(user.username.toLowerCase())) ? '✓' : '·'} 아이디가 들어가지 않음
+              </li>
+            </ul>
+            <Input id="pw-confirm" type="password" label="새 비밀번호 확인" value={f.confirm} onChange={set('confirm')} autoComplete="new-password"
+              error={f.confirm && f.confirm !== f.next ? '새 비밀번호와 다릅니다.' : ''} />
+            {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+            <p className="text-xs text-ink-light leading-5">변경하면 다른 기기·브라우저의 관리자 로그인은 모두 해제되고, 지금 이 창은 그대로 사용할 수 있습니다.</p>
+            <button type="submit" hidden />
+          </form>
+        </Modal>
+      );
+    }
+
     function Header({ user, onLogout }) {
       const { path } = useRouter();
       const [open, setOpen] = useState(false);
+      const [pwOpen, setPwOpen] = useState(false);
       useEffect(() => { setOpen(false); }, [path]);
 
       return (
@@ -495,6 +550,7 @@
             <div className="ml-auto flex items-center gap-2">
               <a href="index.html" target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center h-9 px-3 rounded-md border border-line text-sm text-ink-mid hover:border-mint hover:text-mint-deep">홈페이지 ↗</a>
               <span className="hidden md:inline text-sm text-ink-light">{user?.name || user?.username}님</span>
+              <Button variant="secondary" size="sm" onClick={() => setPwOpen(true)} className="hidden sm:inline-flex h-9">비밀번호 변경</Button>
               <Button variant="secondary" size="sm" onClick={onLogout} className="hidden sm:inline-flex h-9">로그아웃</Button>
               <button onClick={() => setOpen(o => !o)} aria-label="메뉴" aria-expanded={open} className="xl:hidden w-10 h-10 flex flex-col items-center justify-center gap-[5px]">
                 <span className="w-5 h-[2px] bg-ink" /><span className="w-5 h-[2px] bg-ink" /><span className="w-5 h-[2px] bg-ink" />
@@ -512,11 +568,13 @@
                 ))}
                 <li className="flex gap-2 p-4 sm:hidden">
                   <a href="index.html" target="_blank" rel="noopener noreferrer" className="flex-1 h-10 inline-flex items-center justify-center rounded-md border border-line text-sm">홈페이지 ↗</a>
+                  <Button variant="secondary" onClick={() => setPwOpen(true)} className="flex-1">비밀번호 변경</Button>
                   <Button variant="secondary" onClick={onLogout} className="flex-1">로그아웃</Button>
                 </li>
               </ul>
             </nav>
           )}
+          {pwOpen && <PasswordModal user={user} onClose={() => setPwOpen(false)} />}
         </header>
       );
     }
