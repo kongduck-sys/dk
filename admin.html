@@ -50,7 +50,8 @@
     // ⚙️ 상수 · 예시 데이터
     // ----------------------------------------
     // ※ 로그인·상담 신청은 실제 서버(/api/admin, JWT HttpOnly 쿠키)와 DB를 사용합니다.
-    // ※ 회원·후기·이벤트·팝업·통계·설정은 아직 DB가 없어 예시 데이터(이 브라우저에만 저장)입니다.
+    // ※ 이벤트·팝업은 실제 DB(/api/admin/content)를 사용합니다.
+    // ※ 회원·후기·통계·설정은 아직 DB가 없어 예시 데이터(이 브라우저에만 저장)입니다.
     // ========================================
     const API_BASE_URL = '/api/admin';
     const STORAGE_KEY = 'lineco_admin_demo_v1';
@@ -524,7 +525,7 @@
       return (
         <div className="bg-mint/15 border-b border-mint/40 text-[13px] text-mint-deep">
           <div className="max-w-[1600px] mx-auto px-5 py-2">
-            <b>상담 신청</b>은 실제 DB와 연결되어 있습니다 · 회원·후기·이벤트·팝업·통계·설정은 아직 예시 데이터입니다(이 브라우저에만 저장).
+            <b>상담 신청 · 이벤트 · 팝업</b>은 실제 DB와 연결되어 있습니다 · 회원·후기·통계·설정은 아직 예시 데이터입니다(이 브라우저에만 저장).
           </div>
         </div>
       );
@@ -618,6 +619,9 @@
       const { data, loading, error, reload } = useApi('/consults', { size: 5 });
       const summary = data?.summary;
       const hiddenReviews = state.reviews.filter(r => !r.visible).length;
+      const events = useApi('/content', { type: 'events' });
+      const popups = useApi('/content', { type: 'popups' });
+      const liveCount = (r) => (r.loading ? '…' : r.error ? '-' : (r.data?.items || []).filter(i => liveStatus(i).label === '노출 중').length);
       const todayVisits = state.visits[state.visits.length - 1]?.count || 0;
       const num = (v) => (loading ? '…' : (v ?? 0).toLocaleString('ko-KR'));
 
@@ -669,7 +673,8 @@
                 <li className="flex justify-between"><span>미처리 상담</span><Link to="/consults" className="font-bold text-danger">{num(summary?.new)}건</Link></li>
                 <li className="flex justify-between"><span>연락완료 (상담 대기)</span><Link to="/consults" className="font-bold text-ink">{num(summary?.contacted)}건</Link></li>
                 <li className="flex justify-between"><span>비공개 리뷰 (예시)</span><Link to="/reviews" className="font-bold text-ink">{hiddenReviews}건</Link></li>
-                <li className="flex justify-between"><span>노출 중 이벤트 (예시)</span><Link to="/events" className="font-bold text-ink">{state.events.filter(e => e.visible).length}건</Link></li>
+                <li className="flex justify-between"><span>노출 중 이벤트</span><Link to="/events" className="font-bold text-ink">{liveCount(events)}건</Link></li>
+                <li className="flex justify-between"><span>노출 중 팝업</span><Link to="/popups" className="font-bold text-ink">{liveCount(popups)}건</Link></li>
               </ul>
             </Card>
           </div>
@@ -1001,141 +1006,333 @@
     }
 
     // ========================================
-    // 📄 Page: 이벤트 관리
+    // 🖼️ 팝업 · 이벤트 공용 (실제 DB: /api/admin/content)
+    // ========================================
+    // 팝업 클릭 시 이동할 수 있는 홈페이지 메뉴
+    const SITE_PAGES = [
+      { value: '/', label: '홈' },
+      { value: '/introduction', label: '라인앤코 · 소개' },
+      { value: '/space', label: '라인앤코 · 공간 둘러보기' },
+      { value: '/location', label: '라인앤코 · 오시는 길' },
+      { value: '/makeline_diet', label: '메이크라인 다이어트' },
+      { value: '/program/shading', label: '프로그램 · 쉐딩 패키지' },
+      { value: '/program/yeori', label: '프로그램 · 여리 패키지' },
+      { value: '/program/face-balance', label: '프로그램 · 바로 패키지' },
+      { value: '/program/bride', label: '프로그램 · 예비신부 패키지' },
+      { value: '/program/shoulder', label: '바디컨투어링 · 승모 슬림' },
+      { value: '/program/arm', label: '바디컨투어링 · 팔뚝 슬림' },
+      { value: '/program/belly', label: '바디컨투어링 · 복부 슬림' },
+      { value: '/program/hip', label: '바디컨투어링 · 힙 라인 업' },
+      { value: '/program/thigh', label: '바디컨투어링 · 허벅지 슬림' },
+      { value: '/program/calf', label: '바디컨투어링 · 종아리 슬림' },
+      { value: '/face/nose', label: '페이스&스킨 · 코프팅' },
+      { value: '/face/vline', label: '페이스&스킨 · 브이라인 리프팅' },
+      { value: '/face/asymmetry', label: '페이스&스킨 · 안면비대칭' },
+      { value: '/face/volumer', label: '페이스&스킨 · 볼류머샷' },
+      { value: '/face/whitening', label: '페이스&스킨 · 미백주사' },
+      { value: '/event', label: '이벤트 목록' },
+    ];
+    const LINK_TYPE_OPTIONS = [
+      { value: 'page', label: '홈페이지 메뉴로 이동' },
+      { value: 'event', label: '이벤트 상세로 이동' },
+      { value: 'url', label: '외부 링크 (새 창)' },
+      { value: 'none', label: '이동 없음' },
+    ];
+
+    // 미리보기용 이미지 주소 (원본 사이트 경로 · 업로드 이미지 · 외부 URL)
+    const imgSrc = (v) => (!v ? '' : v.startsWith('/UPLOAD') ? `https://makeline.kr${v}` : v);
+
+    // 오늘(한국 시간) 기준 노출 상태
+    const kstToday = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    function liveStatus(item) {
+      const t = kstToday();
+      if (!item.visible) return { label: '숨김', cls: 'bg-line text-ink-mid' };
+      if (item.start_date && item.start_date > t) return { label: '예정', cls: 'bg-brand/10 text-brand-600' };
+      if (item.end_date && item.end_date < t) return { label: '종료', cls: 'bg-ink/10 text-ink-mid' };
+      return { label: '노출 중', cls: 'bg-mint/20 text-mint-deep' };
+    }
+    const fmtPeriod = (s, e) => (s || e ? `${s || '-'} ~ ${e || '-'}` : '상시');
+
+    // 업로드 전에 브라우저에서 줄이기 (긴 변 1600px, JPEG) — GIF는 움직임 유지를 위해 그대로
+    function readImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return reject(new Error('JPG · PNG · WEBP · GIF 이미지만 올릴 수 있습니다.'));
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('파일을 읽지 못했습니다.'));
+        reader.onload = () => {
+          if (file.type === 'image/gif') {
+            if (file.size > 3 * 1024 * 1024) return reject(new Error('GIF는 3MB 이하만 올릴 수 있습니다.'));
+            return resolve({ mime: file.type, data: reader.result });
+          }
+          const im = new Image();
+          im.onerror = () => reject(new Error('이미지를 열 수 없습니다.'));
+          im.onload = () => {
+            const scale = Math.min(1, 1600 / Math.max(im.width, im.height));
+            const c = document.createElement('canvas');
+            c.width = Math.round(im.width * scale); c.height = Math.round(im.height * scale);
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); // 투명 배경은 흰색으로
+            ctx.drawImage(im, 0, 0, c.width, c.height);
+            resolve({ mime: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.88) });
+          };
+          im.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function ImageField({ id, label, value, onChange, hint }) {
+      const toast = useToast();
+      const [busy, setBusy] = useState(false);
+      const onFile = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setBusy(true);
+        try {
+          const payload = await readImage(file);
+          const r = await api('/content', { method: 'POST', query: { type: 'image' }, body: payload });
+          onChange(r.url);
+          toast('이미지를 올렸습니다. 저장을 눌러야 반영됩니다.');
+        } catch (err) {
+          toast(err.message);
+        } finally {
+          setBusy(false);
+        }
+      };
+      return (
+        <div>
+          <label htmlFor={id} className="block mb-1.5 text-[13px] font-medium text-ink-mid">{label}</label>
+          <div className="flex gap-3 items-start">
+            <div className="w-28 aspect-[4/3] shrink-0 rounded-md border border-line bg-bg overflow-hidden flex items-center justify-center">
+              {value ? <img src={imgSrc(value)} alt="미리보기" className="w-full h-full object-contain" /> : <span className="text-xs text-ink-light">이미지 없음</span>}
+            </div>
+            <div className="flex-1 min-w-0 space-y-2">
+              <label className={`inline-flex items-center justify-center h-9 px-3 rounded-md border text-sm cursor-pointer ${busy ? 'opacity-50 pointer-events-none' : 'border-line hover:border-brand hover:text-brand'}`}>
+                {busy ? '올리는 중…' : '이미지 파일 올리기'}
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onFile} className="sr-only" />
+              </label>
+              <input id={id} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="또는 https:// 이미지 주소 붙여넣기"
+                className="w-full h-9 px-3 rounded-md border border-line bg-white text-xs outline-none focus:border-brand" />
+              {hint && <p className="text-xs text-ink-light">{hint}</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 목록 화면 공용: 불러오기 · 노출 토글 · 삭제
+    function useContentList(type) {
+      const res = useApi('/content', { type });
+      const toast = useToast();
+      const patch = async (id, body, msg) => {
+        try { await api('/content', { method: 'PATCH', query: { type, id }, body }); if (msg) toast(msg); res.reload(); }
+        catch (e) { toast(e.message); }
+      };
+      const remove = async (id) => {
+        try { await api('/content', { method: 'DELETE', query: { type, id } }); toast('삭제되었습니다.'); res.reload(); }
+        catch (e) { toast(e.message); }
+      };
+      return { ...res, items: res.data?.items || [], patch, remove };
+    }
+
+    function SiteDelayNote() {
+      return <p className="mt-3 text-xs text-ink-light">※ 저장한 내용은 홈페이지에 1분 안에 반영됩니다. 시작일·종료일은 한국 날짜 기준이며 비워 두면 상시 노출됩니다.</p>;
+    }
+
+    // ========================================
+    // 📄 Page: 이벤트 관리 (홈페이지 '이벤트' 메뉴)
     // ========================================
     function EventsPage() {
-      const { state, dispatch } = useStore();
       const toast = useToast();
+      const { items, loading, error, reload, patch, remove } = useContentList('events');
       const [editing, setEditing] = useState(null);
       const [confirmId, setConfirmId] = useState(null);
-      const empty = { title: '', price: 0, image: '', start: '', end: '', visible: true };
+      const empty = { title: '', price: 0, image: '', description: '', start_date: '', end_date: '', visible: true, sort: (items.length ? Math.max(...items.map(i => i.sort)) + 1 : 0) };
 
-      const save = (data) => {
-        if (!data.title.trim()) return toast('이벤트명을 입력하세요.');
-        if (data.start && data.end && data.start > data.end) return toast('종료일이 시작일보다 빠릅니다.');
-        const clean = { ...data, price: Number(data.price) || 0 };
-        if (clean.id) dispatch({ type: 'update', key: 'events', id: clean.id, patch: clean });
-        else dispatch({ type: 'add', key: 'events', item: clean });
-        setEditing(null);
-        toast('저장되었습니다.');
+      const save = async (f) => {
+        if (!f.title.trim()) return toast('이벤트명을 입력하세요.');
+        if (f.start_date && f.end_date && f.start_date > f.end_date) return toast('종료일이 시작일보다 빠릅니다.');
+        const body = { title: f.title, price: Number(f.price) || 0, image: f.image || '', description: f.description || '', start_date: f.start_date || '', end_date: f.end_date || '', visible: !!f.visible, sort: Number(f.sort) || 0 };
+        try {
+          if (f.id) await api('/content', { method: 'PATCH', query: { type: 'events', id: f.id }, body });
+          else await api('/content', { method: 'POST', query: { type: 'events' }, body });
+          setEditing(null); toast('저장되었습니다.'); reload();
+        } catch (e) { toast(e.message); }
       };
-
-      const imgUrl = (p) => (p ? (p.startsWith('http') ? p : `https://makeline.kr${p}`) : '');
 
       return (
         <>
-          <PageHeader title="이벤트" desc="홈페이지 '이벤트' 메뉴에 노출되는 항목"
+          <PageHeader title="이벤트" desc="홈페이지 '이벤트' 메뉴에 올라가는 이벤트 (팝업과 별도로 관리)"
             actions={<Button onClick={() => setEditing(empty)}>+ 이벤트 등록</Button>} />
           <Card>
-            <Table head={['이미지', '이벤트명', '가격', '기간', '노출', '관리']}>
-              {state.events.length === 0 ? <EmptyRow colSpan={6} /> : state.events.map(ev => (
-                <tr key={ev.id} className="hover:bg-bg-card">
-                  <td className="px-4 py-3">
-                    <div className="w-20 aspect-[350/250] rounded bg-bg overflow-hidden">
-                      {ev.image && <img src={imgUrl(ev.image)} alt="" className="w-full h-full object-cover" loading="lazy" />}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-medium">{ev.title}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{won(ev.price)}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{ev.start || ev.end ? `${ev.start || '-'} ~ ${ev.end || '-'}` : '상시'}</td>
-                  <td className="px-4 py-3"><Toggle label="노출" checked={ev.visible} onChange={(v) => dispatch({ type: 'update', key: 'events', id: ev.id, patch: { visible: v } })} /></td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <Button size="sm" variant="secondary" onClick={() => setEditing(ev)}>수정</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setConfirmId(ev.id)} className="hover:!text-danger">삭제</Button>
-                  </td>
-                </tr>
-              ))}
-            </Table>
+            {loading && !items.length ? <Spinner /> : error ? <ErrorBox error={error} onRetry={reload} /> : (
+              <Table head={['순서', '이미지', '이벤트명', '가격', '기간', '상태', '노출', '관리']}>
+                {items.length === 0 ? <EmptyRow colSpan={8} text="등록된 이벤트가 없습니다." /> : items.map(ev => {
+                  const st = liveStatus(ev);
+                  return (
+                    <tr key={ev.id} className="hover:bg-bg-card">
+                      <td className="px-4 py-3 text-ink-light">{ev.sort}</td>
+                      <td className="px-4 py-3">
+                        <div className="w-20 aspect-[350/250] rounded bg-bg overflow-hidden">
+                          {ev.image && <img src={imgSrc(ev.image)} alt="" className="w-full h-full object-cover" loading="lazy" />}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        {ev.title}
+                        <a href={`index.html#/event/${ev.id}`} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-brand hover:underline">보기 ↗</a>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">{won(ev.price)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-light">{fmtPeriod(ev.start_date, ev.end_date)}</td>
+                      <td className="px-4 py-3"><Badge className={st.cls}>{st.label}</Badge></td>
+                      <td className="px-4 py-3"><Toggle label="노출" checked={ev.visible} onChange={(v) => patch(ev.id, { visible: v }, v ? '노출합니다.' : '숨겼습니다.')} /></td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Button size="sm" variant="secondary" onClick={() => setEditing({ ...ev, start_date: ev.start_date || '', end_date: ev.end_date || '', description: ev.description || '', image: ev.image || '' })}>수정</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setConfirmId(ev.id)} className="hover:!text-danger">삭제</Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </Table>
+            )}
           </Card>
+          <SiteDelayNote />
           {editing && <EventForm initial={editing} onClose={() => setEditing(null)} onSave={save} />}
-          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 이벤트를 삭제할까요?"
-            onConfirm={() => { dispatch({ type: 'remove', key: 'events', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+          <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)}
+            message="이 이벤트를 삭제할까요? 이 이벤트로 연결된 팝업은 '이동 없음'으로 바뀝니다."
+            onConfirm={() => { remove(confirmId); setConfirmId(null); }} />
         </>
       );
     }
 
     function EventForm({ initial, onClose, onSave }) {
       const [f, setF] = useState(initial);
+      const [saving, setSaving] = useState(false);
       const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+      const submit = async () => { setSaving(true); await onSave(f); setSaving(false); };
       return (
-        <Modal isOpen onClose={onClose} title={f.id ? '이벤트 수정' : '이벤트 등록'}
-          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={() => onSave(f)}>저장</Button></>}>
+        <Modal isOpen onClose={onClose} title={f.id ? '이벤트 수정' : '이벤트 등록'} size="lg"
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={submit} disabled={saving}>{saving ? '저장 중…' : '저장'}</Button></>}>
           <div className="space-y-4">
-            <Input id="ev-title" label="이벤트명" value={f.title} onChange={set('title')} />
-            <Input id="ev-price" type="number" min="0" label="가격 (0이면 '가격 상담' 표시)" value={f.price} onChange={set('price')} />
-            <Input id="ev-image" label="이미지 경로 또는 URL" value={f.image} onChange={set('image')} placeholder="/UPLOAD/BOARD/EVENT/..." />
+            <Input id="ev-title" label="이벤트명" value={f.title} onChange={set('title')} maxLength={100} />
+            <ImageField id="ev-image" label="대표 이미지" value={f.image} onChange={(v) => setF({ ...f, image: v })} hint="목록 카드는 가로 350:250 비율로 잘려 보이고, 상세 페이지에는 원본 비율로 크게 표시됩니다." />
             <div className="grid grid-cols-2 gap-3">
-              <Input id="ev-start" type="date" label="시작일" value={f.start} onChange={set('start')} />
-              <Input id="ev-end" type="date" label="종료일" value={f.end} onChange={set('end')} />
+              <Input id="ev-price" type="number" min="0" label="가격 (0이면 '가격 상담')" value={f.price} onChange={set('price')} />
+              <Input id="ev-sort" type="number" label="노출 순서 (작을수록 앞)" value={f.sort} onChange={set('sort')} />
             </div>
-            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 노출</div>
+            <Textarea id="ev-desc" label="상세 설명 (선택 · 이벤트 상세 페이지에 표시)" value={f.description} onChange={set('description')} rows={5} placeholder="이벤트 내용, 대상, 유의사항 등" />
+            <div className="grid grid-cols-2 gap-3">
+              <Input id="ev-start" type="date" label="시작일 (비우면 바로)" value={f.start_date} onChange={set('start_date')} />
+              <Input id="ev-end" type="date" label="종료일 (비우면 상시)" value={f.end_date} onChange={set('end_date')} />
+            </div>
+            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 이벤트 메뉴에 노출</div>
           </div>
         </Modal>
       );
     }
 
     // ========================================
-    // 📄 Page: 팝업 관리
+    // 📄 Page: 팝업 관리 (홈 첫 화면 팝업, 여러 개면 슬라이드)
     // ========================================
     function PopupsPage() {
-      const { state, dispatch } = useStore();
       const toast = useToast();
+      const { items, loading, error, reload, patch, remove } = useContentList('popups');
+      const events = useApi('/content', { type: 'events' });
+      const eventList = events.data?.items || [];
       const [editing, setEditing] = useState(null);
       const [confirmId, setConfirmId] = useState(null);
-      const empty = { title: '', image: '', link: '', start: '', end: '', visible: true };
+      const empty = { title: '', image: '', link_type: 'page', link_target: '/', start_date: '', end_date: '', visible: true, sort: (items.length ? Math.max(...items.map(i => i.sort)) + 1 : 0) };
 
-      const save = (data) => {
-        if (!data.title.trim()) return toast('팝업 제목을 입력하세요.');
-        if (data.id) dispatch({ type: 'update', key: 'popups', id: data.id, patch: data });
-        else dispatch({ type: 'add', key: 'popups', item: data });
-        setEditing(null);
-        toast('저장되었습니다.');
+      const linkLabel = (p) => {
+        if (p.link_type === 'page') return `메뉴 · ${(SITE_PAGES.find(s => s.value === p.link_target) || {}).label || p.link_target}`;
+        if (p.link_type === 'event') return `이벤트 · ${(eventList.find(e => String(e.id) === String(p.link_target)) || {}).title || `#${p.link_target}`}`;
+        if (p.link_type === 'url') return `외부 · ${p.link_target}`;
+        return '이동 없음';
+      };
+
+      const save = async (f) => {
+        if (!f.title.trim()) return toast('팝업 제목을 입력하세요.');
+        if (!f.image) return toast('팝업 이미지를 올려주세요.');
+        if (f.start_date && f.end_date && f.start_date > f.end_date) return toast('종료일이 시작일보다 빠릅니다.');
+        const body = { title: f.title, image: f.image, link_type: f.link_type, link_target: f.link_type === 'none' ? '' : String(f.link_target || ''), start_date: f.start_date || '', end_date: f.end_date || '', visible: !!f.visible, sort: Number(f.sort) || 0 };
+        try {
+          if (f.id) await api('/content', { method: 'PATCH', query: { type: 'popups', id: f.id }, body });
+          else await api('/content', { method: 'POST', query: { type: 'popups' }, body });
+          setEditing(null); toast('저장되었습니다.'); reload();
+        } catch (e) { toast(e.message); }
       };
 
       return (
         <>
-          <PageHeader title="팝업 관리" desc="홈페이지 첫 화면에 뜨는 공지 팝업 (여러 개면 슬라이드로 표시)"
+          <PageHeader title="팝업 관리" desc="홈페이지 첫 화면에 뜨는 팝업 (여러 개면 순서대로 슬라이드) · 클릭하면 지정한 메뉴·이벤트·링크로 이동"
             actions={<Button onClick={() => setEditing(empty)}>+ 팝업 등록</Button>} />
           <Card>
-            <Table head={['제목', '링크', '기간', '노출', '관리']}>
-              {state.popups.length === 0 ? <EmptyRow colSpan={5} text="등록된 팝업이 없습니다." /> : state.popups.map(p => (
-                <tr key={p.id} className="hover:bg-bg-card">
-                  <td className="px-4 py-3 font-medium">{p.title}</td>
-                  <td className="px-4 py-3 text-ink-light max-w-[240px] truncate">{p.link || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-ink-light">{p.start || p.end ? `${p.start || '-'} ~ ${p.end || '-'}` : '상시'}</td>
-                  <td className="px-4 py-3"><Toggle label="노출" checked={p.visible} onChange={(v) => dispatch({ type: 'update', key: 'popups', id: p.id, patch: { visible: v } })} /></td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <Button size="sm" variant="secondary" onClick={() => setEditing(p)}>수정</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setConfirmId(p.id)} className="hover:!text-danger">삭제</Button>
-                  </td>
-                </tr>
-              ))}
-            </Table>
+            {loading && !items.length ? <Spinner /> : error ? <ErrorBox error={error} onRetry={reload} /> : (
+              <Table head={['순서', '이미지', '제목', '클릭 시 이동', '기간', '상태', '노출', '관리']}>
+                {items.length === 0 ? <EmptyRow colSpan={8} text="등록된 팝업이 없습니다." /> : items.map(p => {
+                  const st = liveStatus(p);
+                  return (
+                    <tr key={p.id} className="hover:bg-bg-card">
+                      <td className="px-4 py-3 text-ink-light">{p.sort}</td>
+                      <td className="px-4 py-3">
+                        <div className="w-24 aspect-[16/9] rounded bg-bg overflow-hidden">
+                          {p.image && <img src={imgSrc(p.image)} alt="" className="w-full h-full object-cover" loading="lazy" />}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-medium">{p.title}</td>
+                      <td className="px-4 py-3 text-ink-light max-w-[260px] truncate">{linkLabel(p)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-light">{fmtPeriod(p.start_date, p.end_date)}</td>
+                      <td className="px-4 py-3"><Badge className={st.cls}>{st.label}</Badge></td>
+                      <td className="px-4 py-3"><Toggle label="노출" checked={p.visible} onChange={(v) => patch(p.id, { visible: v }, v ? '노출합니다.' : '숨겼습니다.')} /></td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Button size="sm" variant="secondary" onClick={() => setEditing({ ...p, start_date: p.start_date || '', end_date: p.end_date || '', link_target: p.link_target || '' })}>수정</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setConfirmId(p.id)} className="hover:!text-danger">삭제</Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </Table>
+            )}
           </Card>
-          {editing && (
-            <PopupForm initial={editing} onClose={() => setEditing(null)} onSave={save} />
-          )}
+          <SiteDelayNote />
+          {editing && <PopupForm initial={editing} events={eventList} onClose={() => setEditing(null)} onSave={save} />}
           <ConfirmModal isOpen={confirmId !== null} onClose={() => setConfirmId(null)} message="이 팝업을 삭제할까요?"
-            onConfirm={() => { dispatch({ type: 'remove', key: 'popups', id: confirmId }); setConfirmId(null); toast('삭제되었습니다.'); }} />
+            onConfirm={() => { remove(confirmId); setConfirmId(null); }} />
         </>
       );
     }
 
-    function PopupForm({ initial, onClose, onSave }) {
+    function PopupForm({ initial, events, onClose, onSave }) {
       const [f, setF] = useState(initial);
+      const [saving, setSaving] = useState(false);
       const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+      const submit = async () => { setSaving(true); await onSave(f); setSaving(false); };
+      // 연결 방식을 바꾸면 대상 기본값도 맞춰 준다
+      const changeType = (e) => {
+        const t = e.target.value;
+        const target = t === 'page' ? '/' : t === 'event' ? String(events[0]?.id || '') : t === 'url' ? 'https://' : '';
+        setF({ ...f, link_type: t, link_target: target });
+      };
       return (
-        <Modal isOpen onClose={onClose} title={f.id ? '팝업 수정' : '팝업 등록'}
-          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={() => onSave(f)}>저장</Button></>}>
+        <Modal isOpen onClose={onClose} title={f.id ? '팝업 수정' : '팝업 등록'} size="lg"
+          footer={<><Button variant="secondary" onClick={onClose}>취소</Button><Button onClick={submit} disabled={saving}>{saving ? '저장 중…' : '저장'}</Button></>}>
           <div className="space-y-4">
-            <Input id="pp-title" label="제목" value={f.title} onChange={set('title')} />
-            <Input id="pp-image" label="이미지 URL (권장 800×440)" value={f.image} onChange={set('image')} />
-            <Input id="pp-link" label="클릭 시 이동 링크" value={f.link} onChange={set('link')} placeholder="https://" />
-            <div className="grid grid-cols-2 gap-3">
-              <Input id="pp-start" type="date" label="시작일" value={f.start} onChange={set('start')} />
-              <Input id="pp-end" type="date" label="종료일" value={f.end} onChange={set('end')} />
+            <Input id="pp-title" label="제목 (관리용 · 이미지 대체 텍스트)" value={f.title} onChange={set('title')} maxLength={100} />
+            <ImageField id="pp-image" label="팝업 이미지" value={f.image} onChange={(v) => setF({ ...f, image: v })} hint="권장: 가로형 1400×760 (기존 팝업과 같은 비율). PC에서 최대 864px 폭으로 표시됩니다." />
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Select id="pp-link-type" label="클릭 시 이동" value={f.link_type} onChange={changeType} options={LINK_TYPE_OPTIONS} />
+              {f.link_type === 'page' && <Select id="pp-link-page" label="이동할 메뉴" value={f.link_target} onChange={set('link_target')} options={SITE_PAGES} />}
+              {f.link_type === 'event' && (events.length
+                ? <Select id="pp-link-event" label="연결할 이벤트" value={String(f.link_target)} onChange={set('link_target')} options={events.map(e => ({ value: String(e.id), label: `${e.title}${e.visible ? '' : ' (숨김)'}` }))} />
+                : <p className="self-end pb-2 text-xs text-danger">먼저 이벤트 메뉴에서 이벤트를 등록하세요.</p>)}
+              {f.link_type === 'url' && <Input id="pp-link-url" label="외부 링크 주소" value={f.link_target} onChange={set('link_target')} placeholder="https://" />}
             </div>
-            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지 노출</div>
+            <div className="grid grid-cols-3 gap-3">
+              <Input id="pp-start" type="date" label="시작일 (비우면 바로)" value={f.start_date} onChange={set('start_date')} />
+              <Input id="pp-end" type="date" label="종료일 (비우면 상시)" value={f.end_date} onChange={set('end_date')} />
+              <Input id="pp-sort" type="number" label="순서 (작을수록 먼저)" value={f.sort} onChange={set('sort')} />
+            </div>
+            <div className="flex items-center gap-3 text-sm"><Toggle label="노출" checked={f.visible} onChange={(v) => setF({ ...f, visible: v })} /> 홈페이지에 팝업 노출</div>
           </div>
         </Modal>
       );
