@@ -1560,10 +1560,85 @@
     // ========================================
     // 🚀 App Component
     // ========================================
+    // ========================================
+    // 📄 Page: 비밀번호 재설정 (로그인 없이, 일회용 재설정 코드 필요)
+    // ========================================
+    function ResetPage({ onDone }) {
+      const [token, setToken] = useState('');
+      const [users, setUsers] = useState(null);
+      const [username, setUsername] = useState('');
+      const [pw, setPw] = useState({ next: '', confirm: '' });
+      const [error, setError] = useState('');
+      const [busy, setBusy] = useState(false);
+      const post = async (body) => {
+        const r = await fetch('/api/admin/reset', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const j = await r.json().catch(() => ({}));
+        if (r.status === 404) throw new Error('지금은 재설정이 꺼져 있습니다. 관리자에게 재설정 코드를 요청하세요.');
+        if (!r.ok || j.ok === false) throw new Error(j.message || `요청 실패 (${r.status})`);
+        return j;
+      };
+      const checkToken = async (e) => {
+        e.preventDefault(); setError(''); setBusy(true);
+        try { const j = await post({ token }); setUsers(j.users); setUsername(j.users[0]?.username || ''); }
+        catch (err) { setError(err.message); } finally { setBusy(false); }
+      };
+      const ok = PW_RULES.every(r => r.test(pw.next)) && !(username && pw.next.toLowerCase().includes(username));
+      const submit = async (e) => {
+        e.preventDefault(); setError('');
+        if (!ok) return setError('새 비밀번호가 규칙에 맞지 않습니다.');
+        if (pw.next !== pw.confirm) return setError('새 비밀번호 확인이 일치하지 않습니다.');
+        setBusy(true);
+        try { const j = await post({ token, username, password: pw.next }); onDone(`${j.message} (아이디: ${username})`); }
+        catch (err) { setError(err.message); } finally { setBusy(false); }
+      };
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-8">
+            <p className="text-sm text-ink-light text-center">라인앤코한의원</p>
+            <h1 className="mt-1 text-2xl font-bold text-center">관리자 비밀번호 재설정</h1>
+            {!users ? (
+              <form onSubmit={checkToken} className="mt-8 space-y-4">
+                <Input id="rs-token" label="재설정 코드" value={token} onChange={(e) => { setToken(e.target.value); setError(''); }} autoComplete="off" placeholder="전달받은 재설정 코드 붙여넣기" />
+                {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+                <Button type="submit" size="lg" className="w-full" disabled={busy || !token.trim()}>{busy ? '확인 중…' : '확인'}</Button>
+              </form>
+            ) : (
+              <form onSubmit={submit} className="mt-8 space-y-4">
+                <div>
+                  <p className="mb-1.5 text-[13px] font-medium text-ink-mid">관리자 아이디</p>
+                  {users.length === 1 ? (
+                    <p className="h-10 px-3 flex items-center rounded-md bg-bg font-bold text-ink">{users[0].username} <span className="ml-2 text-xs font-normal text-ink-light">{users[0].name}</span></p>
+                  ) : (
+                    <Select id="rs-user" value={username} onChange={(e) => setUsername(e.target.value)} options={users.map(u => ({ value: u.username, label: `${u.username} (${u.name})` }))} />
+                  )}
+                </div>
+                <input type="text" name="username" autoComplete="username" value={username} readOnly hidden />
+                <Input id="rs-next" type="password" label="새 비밀번호" value={pw.next} onChange={(e) => { setPw({ ...pw, next: e.target.value }); setError(''); }} autoComplete="new-password" />
+                <ul className="space-y-1 text-xs">
+                  {PW_RULES.map(r => { const v = r.test(pw.next); return <li key={r.label} className={v ? 'text-mint-deep' : 'text-ink-light'}>{v ? '✓' : '·'} {r.label}</li>; })}
+                </ul>
+                <Input id="rs-confirm" type="password" label="새 비밀번호 확인" value={pw.confirm} onChange={(e) => { setPw({ ...pw, confirm: e.target.value }); setError(''); }} autoComplete="new-password"
+                  error={pw.confirm && pw.confirm !== pw.next ? '새 비밀번호와 다릅니다.' : ''} />
+                {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+                <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? '저장 중…' : '비밀번호 재설정'}</Button>
+              </form>
+            )}
+            <p className="mt-6 text-center"><a href="#/" className="text-sm text-ink-light hover:text-brand">로그인 화면으로</a></p>
+          </Card>
+        </div>
+      );
+    }
+
     function App() {
       // 'checking' → 서버에 세션 확인 중 / null → 로그아웃 상태 / 객체 → 로그인한 관리자
       const [user, setUser] = useState('checking');
       const [notice, setNotice] = useState('');
+      const [resetMode, setResetMode] = useState(() => window.location.hash.startsWith('#/reset'));
+      useEffect(() => {
+        const onHash = () => setResetMode(window.location.hash.startsWith('#/reset'));
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+      }, []);
 
       useEffect(() => {
         api('/me').then(r => setUser(r.user)).catch(() => setUser(null));
@@ -1582,6 +1657,8 @@
       if (user === 'checking') {
         return <div className="min-h-screen flex items-center justify-center"><Spinner label="로그인 상태 확인 중…" /></div>;
       }
+      // 비밀번호를 잊었을 때: admin.html#/reset (서버에 일회용 재설정 코드가 있을 때만 동작)
+      if (!user && resetMode) return <ResetPage onDone={(msg) => { setNotice(msg); window.location.hash = '/'; }} />;
       if (!user) return <LoginPage onLogin={login} notice={notice} />;
 
       return (
