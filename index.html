@@ -1653,7 +1653,22 @@
     // 메이크라인 환 구성 약재 (다이어트환 전용 사이트 lineco.kr 의 약재 구성·이미지 활용)
     // ※ 문구는 새로 작성, 효과 보장·'부작용 없음'·수치 표현은 제외 (의료법 제56조)
     // ----------------------------------------
-    const HERB_IMG = (n) => `https://lineco.kr/img/medicinefood${n}.png`;
+    // lineco.kr 서버가 내려가 외부 링크 대신 로컬 파일 사용 (images/site/medicinefood{n}.png)
+    const HERB_IMG = (n) => img(`medicinefood${n}.png`);
+
+    // 약재 원형 사진 — 파일이 없거나 불러오지 못하면 약재 이름 원형으로 대체
+    function HerbPhoto({ n, name }) {
+      const [failed, setFailed] = useState(false);
+      const cls = 'w-24 h-24 md:w-28 md:h-28 shrink-0 rounded-full';
+      if (failed) {
+        return (
+          <div className={`${cls} flex items-center justify-center bg-white border border-black/10 font-serif text-lg md:text-xl text-mint-700`} role="img" aria-label={name}>
+            {name}
+          </div>
+        );
+      }
+      return <img src={HERB_IMG(n)} alt={name} loading="lazy" onError={() => setFailed(true)} className={`${cls} object-cover bg-white`} />;
+    }
     const DIET_HERB_GROUPS = [
       {
         key: 'burn', en: 'FAT BURNING', name: '팻버닝 핵심약재', count: '2종',
@@ -1731,7 +1746,7 @@
               <ul className={`mt-8 grid gap-x-6 gap-y-10 ${group.herbs.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 {group.herbs.map(h => (
                   <li key={h.name} className="flex gap-5 items-start">
-                    <img src={HERB_IMG(h.n)} alt={h.name} loading="lazy" className="w-24 h-24 md:w-28 md:h-28 shrink-0 rounded-full object-cover bg-white" />
+                    <HerbPhoto n={h.n} name={h.name} />
                     <div>
                       <h4 className="font-serif text-lg md:text-xl text-ink-dark">{h.name}</h4>
                       <ul className="mt-2 flex flex-wrap gap-1.5">
