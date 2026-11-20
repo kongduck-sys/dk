@@ -61,7 +61,7 @@
       var dict = GLOSSARY[window.SITE_LANG];
       if (dict) {
         var TERM_RE = /라인앤코\s?한의원|메이크라인\s?다이어트|메이크라인\s?환(?!자|약)|메이크라인|라인앤코|한의원|오리지널|부스트/g;
-        var REWRITE_RE = /((?:다이어트|디톡스)\s?환|(?:^|\s)환(?=에 함께))(?!자|약|경)/g;
+        var REWRITE_RE = /((?:다이어트|디톡스|농축|아쿠아밸런스)\s?환|(?:^|\s)환(?=에 함께))(?!자|약|경)/g;
         var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, NOSCRIPT: 1 };
         var protect = function (node) {
           var p = node.parentNode;
