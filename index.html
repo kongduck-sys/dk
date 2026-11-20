@@ -39,12 +39,106 @@
       },
     };
   </script>
+  <!-- 자동 번역(구글 번역): 국기 버튼이 googtrans 쿠키를 설정하고 새로고침 → 쿠키가 있으면 여기서 번역 스크립트 로드 -->
+  <script>
+    (function () {
+      var m = document.cookie.match(/(?:^|;\s*)googtrans=\/ko\/([^;]+)/);
+      window.SITE_LANG = m ? decodeURIComponent(m[1]) : 'ko';
+      if (window.SITE_LANG === 'ko') return;
+      // 번역이 바꾼 텍스트 노드를 React가 지우려다 오류 나는 문제 방지 (facebook/react#11538)
+      var rc = Node.prototype.removeChild;
+      Node.prototype.removeChild = function (c) { return c.parentNode === this ? rc.apply(this, arguments) : c; };
+      var ib = Node.prototype.insertBefore;
+      Node.prototype.insertBefore = function (n, r) { return r && r.parentNode !== this ? n : ib.apply(this, arguments); };
+      // 구글이 오역하는 단어 보정 (한의원→"ハン議員", 메이크라인 다이어트→"美式饮食", 환→"環")
+      //  · LOCK: 병원·브랜드·제품명은 정해 둔 표기로 바꿔 notranslate 로 감쌈 (긴 표현부터 매칭)
+      //  · REWRITE: 일반 단어는 구글이 바르게 번역하는 한국어로 바꿔 둠 (환 → 환약). 문장 번역은 구글에 맡김
+      var GLOSSARY = {
+        en: { '라인앤코한의원': 'LINE&CO Korean Medicine Clinic', '메이크라인다이어트': 'MAKELINE Diet', '메이크라인환': 'MAKELINE Pill', '메이크라인': 'MAKELINE', '라인앤코': 'LINE&CO', '한의원': 'Korean medicine clinic', '오리지널': 'Original', '부스트': 'Boost' },
+        'zh-CN': { '라인앤코한의원': 'LINE&CO 韩医院', '메이크라인다이어트': 'MAKELINE 减肥', '메이크라인환': 'MAKELINE 丸', '메이크라인': 'MAKELINE', '라인앤코': 'LINE&CO', '한의원': '韩医院', '오리지널': 'Original', '부스트': 'Boost' },
+        ja: { '라인앤코한의원': 'LINE&CO 韓医院', '메이크라인다이어트': 'MAKELINE ダイエット', '메이크라인환': 'MAKELINE 丸', '메이크라인': 'MAKELINE', '라인앤코': 'LINE&CO', '한의원': '韓医院', '오리지널': 'Original', '부스트': 'Boost' }
+      };
+      var dict = GLOSSARY[window.SITE_LANG];
+      if (dict) {
+        var TERM_RE = /라인앤코\s?한의원|메이크라인\s?다이어트|메이크라인\s?환(?!자|약)|메이크라인|라인앤코|한의원|오리지널|부스트/g;
+        var REWRITE_RE = /((?:다이어트|디톡스)\s?환|(?:^|\s)환(?=에 함께))(?!자|약|경)/g;
+        var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, NOSCRIPT: 1 };
+        var protect = function (node) {
+          var p = node.parentNode;
+          if (!p || SKIP[p.nodeName] || (p.closest && p.closest('.notranslate'))) return;
+          REWRITE_RE.lastIndex = 0;
+          if (REWRITE_RE.test(node.nodeValue)) node.nodeValue = node.nodeValue.replace(REWRITE_RE, '$1약');
+          var text = node.nodeValue;
+          TERM_RE.lastIndex = 0;
+          if (!TERM_RE.test(text)) return;
+          TERM_RE.lastIndex = 0;
+          var frag = document.createDocumentFragment(), last = 0, m;
+          while ((m = TERM_RE.exec(text))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+            var sp = document.createElement('span');
+            sp.className = 'notranslate';
+            sp.setAttribute('translate', 'no');
+            sp.textContent = dict[m[0].replace(/\s/g, '')];
+            // 영어는 띄어쓰기가 필요: 한국어 조사가 붙어 있던 자리("라인앤코한의원에서는")에 공백 보충
+            if (window.SITE_LANG === 'en') {
+              var before = text.charAt(m.index - 1), after = text.charAt(m.index + m[0].length);
+              if (before && !/[(\[“"']/.test(before)) sp.textContent = ' ' + sp.textContent; // 구글이 앞 문장 끝 공백을 지우므로 공백이 있어도 보충
+              if (after && !/[\s.,!?·)\]”"':;/]/.test(after)) sp.textContent += ' ';
+            }
+            frag.appendChild(sp);
+            last = m.index + m[0].length;
+          }
+          if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+          p.replaceChild(frag, node);
+        };
+        var walk = function (root) {
+          if (root.nodeType === 3) return protect(root);
+          var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), list = [], n;
+          while ((n = w.nextNode())) list.push(n);
+          list.forEach(protect);
+        };
+        // 탭 제목도 구글이 다시 번역하므로("韩国有限公司") 바뀔 때마다 정해 둔 표기로 되돌림
+        var siteTitle = dict['라인앤코한의원'];
+        document.title = siteTitle;
+        document.addEventListener('DOMContentLoaded', function () {
+          var t = document.querySelector('title');
+          new MutationObserver(function () { if (document.title !== siteTitle) document.title = siteTitle; })
+            .observe(t, { childList: true, characterData: true, subtree: true });
+          var root = document.getElementById('root');
+          walk(root);
+          new MutationObserver(function (ms) {
+            ms.forEach(function (mu) {
+              if (mu.type === 'characterData') protect(mu.target);
+              else mu.addedNodes.forEach(walk);
+            });
+          }).observe(root, { childList: true, subtree: true, characterData: true });
+        });
+      }
+      window.googleTranslateElementInit = function () {
+        new google.translate.TranslateElement({ pageLanguage: 'ko', includedLanguages: 'en,zh-CN,ja', autoDisplay: false }, 'google_translate_element');
+      };
+      var s = document.createElement('script');
+      s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      s.async = true;
+      document.head.appendChild(s);
+    })();
+  </script>
   <!-- ⚠️ 모든 CDN은 버전을 명시적으로 고정한다. Babel 은 반드시 7.x -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
   <style>
     body { font-family: 'Noto Sans KR', sans-serif; color: #2A2A2A; overflow-x: hidden; word-break: keep-all; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+
+    /* ---- 자동 번역: 구글 번역 기본 상단 바·말풍선 숨김 + 국기 버튼 ---- */
+    #google_translate_element, .skiptranslate > iframe, iframe.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame,
+    .VIpgJd-ZVi9od-ORHb-OEVmcd, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .VIpgJd-yAWNEb-L7lbkb { display: none !important; }
+    body { top: 0 !important; }
+    .goog-text-highlight { background: none !important; box-shadow: none !important; }
+    .lang-flag { display: block; width: 22px; height: 15px; padding: 0; opacity: .45; transition: opacity .2s; }
+    .lang-flag svg { display: block; width: 100%; height: 100%; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+    .lang-flag:hover, .lang-flag:focus-visible, .lang-flag.on { opacity: 1; }
+    .lang-flag.on { outline: 1px solid #2b2b2b; outline-offset: 2px; }
 
     /* ---- 공용 버튼·태그: 각진 모서리 + 얇은 라인 (미니멀 톤) ---- */
     .btn-solid-light, .btn-line-light, .btn-line-dark, .btn-solid-dark {
@@ -96,6 +190,7 @@
   </style>
 </head>
 <body class="bg-white">
+  <div id="google_translate_element"></div>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -415,6 +510,40 @@
     // ========================================
     // 🧩 Common/Layout Components
     // ========================================
+    // ----------------------------------------
+    // 언어 전환 국기 (구글 자동 번역) — googtrans 쿠키 설정 후 새로고침
+    // ----------------------------------------
+    const LANG_FLAGS = [
+      { code: 'ko', label: '한국어', svg: '<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><g transform="translate(15 10)"><path d="M-5 0a5 5 0 0 1 10 0a2.5 2.5 0 0 1-5 0a2.5 2.5 0 0 0-5 0z" fill="#cd2e3a"/><path d="M5 0a5 5 0 0 1-10 0a2.5 2.5 0 0 1 5 0a2.5 2.5 0 0 0 5 0z" fill="#0047a0"/></g><g fill="#000"><rect x="3" y="3.2" width="5" height=".9" transform="rotate(-33 5.5 3.6)"/><rect x="3.5" y="4.6" width="5" height=".9" transform="rotate(-33 6 5)"/><rect x="22" y="3.2" width="5" height=".9" transform="rotate(33 24.5 3.6)"/><rect x="21.5" y="4.6" width="5" height=".9" transform="rotate(33 24 5)"/><rect x="3.5" y="14.5" width="5" height=".9" transform="rotate(33 6 15)"/><rect x="3" y="15.9" width="5" height=".9" transform="rotate(33 5.5 16.3)"/><rect x="21.5" y="14.5" width="5" height=".9" transform="rotate(-33 24 15)"/><rect x="22" y="15.9" width="5" height=".9" transform="rotate(-33 24.5 16.3)"/></g></svg>' },
+      { code: 'en', label: 'English', svg: '<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><g fill="#b22234">' + [0, 2, 4, 6, 8, 10, 12].map(i => `<rect y="${i * 20 / 13}" width="30" height="${20 / 13}"/>`).join('') + '</g><rect width="12" height="10.77" fill="#3c3b6e"/></svg>' },
+      { code: 'zh-CN', label: '中文', svg: '<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#de2910"/><polygon points="5,2.5 5.9,5.2 8.7,5.2 6.4,6.8 7.3,9.5 5,7.9 2.7,9.5 3.6,6.8 1.3,5.2 4.1,5.2" fill="#ffde00"/><g fill="#ffde00"><circle cx="10" cy="2" r=".7"/><circle cx="12" cy="4" r=".7"/><circle cx="12" cy="7" r=".7"/><circle cx="10" cy="9" r=".7"/></g></svg>' },
+      { code: 'ja', label: '日本語', svg: '<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="6" fill="#bc002d"/></svg>' },
+    ];
+
+    function setSiteLang(code) {
+      if (code === window.SITE_LANG) return;
+      // 구글 번역은 현재 호스트와 상위 도메인 양쪽에 쿠키를 둘 수 있어 둘 다 정리
+      const host = location.hostname;
+      const domains = ['', `; domain=${host}`, `; domain=.${host.replace(/^www\./, '')}`];
+      domains.forEach(d => { document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${d}`; });
+      if (code !== 'ko') domains.forEach(d => { document.cookie = `googtrans=/ko/${code}; path=/${d}`; });
+      location.reload();
+    }
+
+    function LangSwitcher({ className = '', small = false }) {
+      return (
+        <div className={`notranslate flex items-center ${small ? 'gap-2' : 'gap-2.5'} ${className}`} translate="no" role="group" aria-label="언어 선택 / Language">
+          {LANG_FLAGS.map(f => (
+            <button key={f.code} type="button" onClick={() => setSiteLang(f.code)} title={f.label} aria-label={f.label}
+              aria-pressed={window.SITE_LANG === f.code}
+              className={`lang-flag ${window.SITE_LANG === f.code ? 'on' : ''}`}
+              style={small ? { width: 20, height: 14 } : undefined}
+              dangerouslySetInnerHTML={{ __html: f.svg }} />
+          ))}
+        </div>
+      );
+    }
+
     function Header() {
       const { path } = useRouter();
       const [mOpen, setMOpen] = useState(false);
@@ -432,8 +561,10 @@
         <>
           {/* PC Header — 1301px 이상 (원본 header-styled02) */}
           <header className="hidden pc:block absolute top-0 left-0 w-full bg-white z-[9999] shadow-[0_4px_8px_rgba(0,0,0,0.12)]">
-            <div className="h-[35px] leading-[35px] text-center font-prata italic text-[12px] tracking-[1px] text-ink-dark bg-stone">
+            <div className="relative h-[35px] leading-[35px] text-center font-prata italic text-[12px] tracking-[1px] text-ink-dark bg-stone">
               We find your hidden line.
+              {/* 언어 국기 — 아래 메뉴 컨테이너(w-[calc(100%-400px)] max-w-[1180px])의 오른쪽 끝에 맞춤 */}
+              <LangSwitcher className="absolute top-1/2 -translate-y-1/2 right-[max(200px,calc((100%_-_1180px)/2))]" />
             </div>
             <div className="relative">
               {/* [숨김] 로그인/회원가입 — 다시 쓸 때 아래 주석 해제 (PC 헤더 오른쪽)
@@ -478,6 +609,7 @@
               <a href="#/" className="h-full" aria-label="라인앤코한의원 홈">
                 <img src={`${IMG}/logo_full.svg`} alt="라인앤코한의원" className="h-full" />
               </a>
+              <LangSwitcher small className="ml-auto mr-[58px]" />
             </div>
             <button onClick={() => setMOpen(o => !o)} aria-label={mOpen ? '메뉴 닫기' : '메뉴 열기'} aria-expanded={mOpen}
               className={`burger ${mOpen ? 'open' : ''} fixed top-[5px] right-4 w-[50px] h-[50px] z-[10002]`}>
@@ -633,15 +765,16 @@
             {!open && (
               <div className="md:hidden flex items-stretch gap-2 px-4 py-2.5">
                 <button type="button" onClick={() => setOpen(true)} aria-expanded="false" aria-controls="consult-form"
-                  className="flex-1 flex items-center justify-between h-12 pl-4 pr-3 bg-ink-dark text-white">
-                  <span className="flex flex-col items-start leading-tight">
+                  className="flex-1 min-w-0 flex items-center justify-between gap-2 min-h-12 py-1.5 pl-4 pr-3 bg-ink-dark text-white">
+                  {/* 번역 시 문구가 길어져도 버튼 높이가 늘어나도록 min-h + 줄바꿈 허용 */}
+                  <span className="min-w-0 flex flex-col items-start text-left leading-tight">
                     <span className="text-[14px] font-medium">비대면 처방 · 진료상담 신청</span>
                     <span className="text-[11px] text-white/70">이름·연락처만 남기면 연락드려요</span>
                   </span>
-                  <span className="flex items-center gap-1 text-[12px] text-white/90" aria-hidden="true">열기 <span className="text-base leading-none">▴</span></span>
+                  <span className="shrink-0 flex items-center gap-1 text-[12px] text-white/90" aria-hidden="true">열기 <span className="text-base leading-none">▴</span></span>
                 </button>
                 <a href="tel:02-595-0160" aria-label="전화 상담 02-595-0160"
-                  className="w-12 h-12 shrink-0 flex flex-col items-center justify-center border border-ink-dark/70 text-ink-dark bg-white">
+                  className="w-12 min-h-12 shrink-0 flex flex-col items-center justify-center text-center leading-tight border border-ink-dark/70 text-ink-dark bg-white">
                   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" /></svg>
                   <span className="text-[10px] mt-0.5">전화</span>
                 </a>
